@@ -10,27 +10,13 @@ import Image from "next/image"
 import { CommentSection } from "@/components/comment-section"
 import { useState } from "react"
 
-interface Project {
-  id: string
-  title: string
-  description: string
-  amount: string
-  contractor: string
-  location: string
-  status: string
-  progress: number
-  likes: number
-  dislikes: number
-  comments: number
+import type { Project as ProjectModel } from "@/models/project-model"
+
+interface Project extends Omit<ProjectModel, "image" | "milestones"> {
   images: string[]
-  expectedOutcome: string
-  personnel: string
-  reason: string
-  startDate: string
-  expectedCompletion: string
   milestones: Array<{
     title: string
-    date: string
+    date: Date
     completed: boolean
   }>
 }
@@ -130,11 +116,11 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
           </div>
           <div className="flex items-center">
             <Calendar className="w-4 h-4 mr-1" />
-            Started: {new Date(project.startDate).toLocaleDateString()}
+            Started: {project.startDate instanceof Date ? project.startDate.toLocaleDateString() : new Date(project.startDate).toLocaleDateString()}
           </div>
           <div className="flex items-center">
             <Clock className="w-4 h-4 mr-1" />
-            Expected: {new Date(project.expectedCompletion).toLocaleDateString()}
+            Expected: {project.expectedCompletionDate instanceof Date ? project.expectedCompletionDate.toLocaleDateString() : new Date(project.expectedCompletionDate).toLocaleDateString()}
           </div>
         </div>
       </div>
@@ -207,7 +193,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                         <span className={`font-medium ${milestone.completed ? "text-foreground" : "text-gray-600"}`}>
                           {milestone.title}
                         </span>
-                        <span className="text-sm text-gray-500">{new Date(milestone.date).toLocaleDateString()}</span>
+                        <span className="text-sm text-gray-500">{milestone.date instanceof Date ? milestone.date.toLocaleDateString() : new Date(milestone.date).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </div>

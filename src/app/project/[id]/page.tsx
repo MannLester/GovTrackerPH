@@ -21,15 +21,15 @@ const mockProject = {
   personnel:
     "Secretary Arthur Tugade (DOTr), Project Manager Juan Santos (DMCI), Chief Engineer Hiroshi Tanaka (Tokyo Metro)",
   reason: "Address severe traffic congestion in Metro Manila and provide sustainable public transportation",
-  startDate: "2019-02-27",
-  expectedCompletion: "2025-12-31",
+  startDate: new Date("2019-02-27"),
+  expectedCompletionDate: new Date("2025-12-31"),
   milestones: [
-    { title: "Ground Breaking", date: "2019-02-27", completed: true },
-    { title: "Tunnel Boring Completion", date: "2023-06-15", completed: true },
-    { title: "Station Construction", date: "2024-03-30", completed: false },
-    { title: "Systems Installation", date: "2024-09-15", completed: false },
-    { title: "Testing & Commissioning", date: "2025-06-30", completed: false },
-    { title: "Commercial Operations", date: "2025-12-31", completed: false },
+    { title: "Ground Breaking", date: new Date("2019-02-27"), completed: true },
+    { title: "Tunnel Boring Completion", date: new Date("2023-06-15"), completed: true },
+    { title: "Station Construction", date: new Date("2024-03-30"), completed: false },
+    { title: "Systems Installation", date: new Date("2024-09-15"), completed: false },
+    { title: "Testing & Commissioning", date: new Date("2025-06-30"), completed: false },
+    { title: "Commercial Operations", date: new Date("2025-12-31"), completed: false },
   ],
 }
 

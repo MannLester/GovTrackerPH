@@ -19,6 +19,14 @@ const mockProjects = [
     expectedOutcome: "Reduce travel time by 50% and ease traffic congestion",
     personnel: "Secretary Arthur Tugade, Project Manager Juan Santos",
     reason: "Address severe traffic congestion in Metro Manila",
+    startDate: new Date("2022-01-15"),
+    expectedCompletionDate: new Date("2027-12-31"),
+    milestones: [
+      { title: "Groundbreaking", date: new Date("2022-01-15"), completed: true },
+      { title: "Tunnel Boring Start", date: new Date("2023-06-01"), completed: true },
+      { title: "50% Completion", date: new Date("2025-01-01"), completed: false },
+      { title: "Expected Completion", date: new Date("2027-12-31"), completed: false },
+    ],
   },
   {
     id: "2",
@@ -36,6 +44,13 @@ const mockProjects = [
     expectedOutcome: "Improve connectivity and boost economic growth",
     personnel: "Governor Gwendolyn Garcia, Engineer Maria Cruz",
     reason: "Enhance transportation between Cebu City and Mactan Island",
+    startDate: new Date("2017-07-01"),
+    expectedCompletionDate: new Date("2022-04-27"),
+    milestones: [
+      { title: "Groundbreaking", date: new Date("2017-07-01"), completed: true },
+      { title: "Bridge Span Completion", date: new Date("2021-12-01"), completed: true },
+      { title: "Opening", date: new Date("2022-04-27"), completed: true },
+    ],
   },
   {
     id: "3",
@@ -53,6 +68,13 @@ const mockProjects = [
     expectedOutcome: "Decentralize government operations and create jobs",
     personnel: "BCDA President Vince Dizon, Architect Anna Reyes",
     reason: "Support the development of New Clark City as a smart city",
+    startDate: new Date("2026-03-01"),
+    expectedCompletionDate: new Date("2029-12-31"),
+    milestones: [
+      { title: "Planning", date: new Date("2025-09-01"), completed: false },
+      { title: "Groundbreaking", date: new Date("2026-03-01"), completed: false },
+      { title: "Expected Completion", date: new Date("2029-12-31"), completed: false },
+    ],
   },
   {
     id: "4",
@@ -70,6 +92,13 @@ const mockProjects = [
     expectedOutcome: "Improve transportation and economic development in Mindanao",
     personnel: "DOTr Undersecretary Timothy Batan, Engineer Roberto Silva",
     reason: "Enhance connectivity in Southern Philippines",
+    startDate: new Date("2023-02-01"),
+    expectedCompletionDate: new Date("2028-06-30"),
+    milestones: [
+      { title: "Groundbreaking", date: new Date("2023-02-01"), completed: true },
+      { title: "Track Laying Start", date: new Date("2025-01-01"), completed: false },
+      { title: "Expected Completion", date: new Date("2028-06-30"), completed: false },
+    ],
   },
   {
     id: "5",
@@ -87,6 +116,13 @@ const mockProjects = [
     expectedOutcome: "Protect 500,000 residents from flooding",
     personnel: "Mayor Jerry Treñas, Engineer Lisa Fernandez",
     reason: "Address recurring flood problems during typhoon season",
+    startDate: new Date("2021-08-01"),
+    expectedCompletionDate: new Date("2025-11-30"),
+    milestones: [
+      { title: "Planning", date: new Date("2020-12-01"), completed: true },
+      { title: "Construction Start", date: new Date("2021-08-01"), completed: true },
+      { title: "Expected Completion", date: new Date("2025-11-30"), completed: false },
+    ],
   },
   {
     id: "6",
@@ -104,6 +140,13 @@ const mockProjects = [
     expectedOutcome: "Increase tourist arrivals by 300%",
     personnel: "Governor Arthur Yap, Airport Manager Carlos Mendoza",
     reason: "Support tourism growth and economic development",
+    startDate: new Date("2018-06-01"),
+    expectedCompletionDate: new Date("2021-11-27"),
+    milestones: [
+      { title: "Groundbreaking", date: new Date("2018-06-01"), completed: true },
+      { title: "Terminal Completion", date: new Date("2021-10-01"), completed: true },
+      { title: "Opening", date: new Date("2021-11-27"), completed: true },
+    ],
   },
 ]
 

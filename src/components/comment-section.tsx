@@ -6,17 +6,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ThumbsUp, ThumbsDown, Reply, Flag } from "lucide-react"
 import { useState } from "react"
-
-interface Comment {
-  id: string
-  author: string
-  avatar: string
-  content: string
-  timestamp: string
-  likes: number
-  dislikes: number
-  replies: Comment[]
-}
+import { Comment } from "@/models/comment-model"
 
 interface CommentSectionProps {
   projectId: string
