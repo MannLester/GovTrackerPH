@@ -53,9 +53,11 @@ interface ApiProjectResponse {
   primary_image?: string;
   images?: string[];
   milestones?: Array<{
+    milestone_id: string;
     title: string;
-    date: string;
-    completed: boolean;
+    target_date: string;
+    is_completed: boolean;
+    completed_at?: string;
   }>;
 }
 
@@ -131,8 +133,8 @@ export class ProjectsService {
       images: project.images || [],
       milestones: project.milestones?.map(m => ({
         title: m.title,
-        date: safeDate(m.date),
-        completed: m.completed
+        date: safeDate(m.target_date),
+        completed: m.is_completed
       })) || [],
     }));
 
@@ -178,8 +180,8 @@ export class ProjectsService {
       images: project.images || [],
       milestones: project.milestones?.map(m => ({
         title: m.title,
-        date: safeDate(m.date),
-        completed: m.completed
+        date: safeDate(m.target_date),
+        completed: m.is_completed
       })) || [],
     };
   }

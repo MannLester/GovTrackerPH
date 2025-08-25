@@ -1,5 +1,6 @@
 import { supabase, handleSupabaseError } from '../client';
 import { Project, ProjectFilters, PaginatedResponse, ProjectWithJoins, LocationResponse, StatusResponse } from '../types';
+import { milestonesRepository, Milestone } from './milestones';
 
 export class ProjectsRepository {
     
@@ -139,6 +140,9 @@ export class ProjectsRepository {
                 return null;
             }
 
+            // Fetch milestones for this project
+            const milestones = await milestonesRepository.getMilestonesByProjectId(projectId);
+
             // Transform the data to match our Project interface
             const project: Project = {
                 project_id: data.project_id,
@@ -164,10 +168,18 @@ export class ProjectsRepository {
                 region: data.dim_location?.region,
                 province: data.dim_location?.province,
                 city: data.dim_location?.city,
-                barangay: data.dim_location?.barangay
+                barangay: data.dim_location?.barangay,
+                // Include milestones
+                milestones: milestones.map(m => ({
+                    milestone_id: m.milestone_id,
+                    title: m.title,
+                    target_date: m.target_date,
+                    is_completed: m.is_completed,
+                    completed_at: m.completed_at
+                }))
             };
 
-            console.log(`✅ Successfully fetched project: ${project.title}`);
+            console.log(`✅ Successfully fetched project: ${project.title} with ${milestones.length} milestones`);
             return project;
 
         } catch (error) {

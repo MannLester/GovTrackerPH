@@ -24,6 +24,15 @@ export interface Project {
     city?: string;
     barangay?: string;
     contractor_name?: string;
+    
+    // Milestones
+    milestones?: Array<{
+        milestone_id: string;
+        title: string;
+        target_date: string;
+        is_completed: boolean;
+        completed_at?: string;
+    }>;
 }
 
 // Database response types
