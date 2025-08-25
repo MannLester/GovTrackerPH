@@ -45,7 +45,7 @@ export class ProjectsRepository {
                 project_id: item.project_id,
                 title: item.title,
                 description: item.description,
-                budget: item.budget,
+                budget: item.amount,
                 start_date: item.start_date,
                 end_date: item.end_date,
                 status_id: item.status_id,

@@ -4,7 +4,7 @@ export interface Project {
     project_id: string; // UUID
     title: string; // Actual column name is 'title', not 'project_name'
     description: string;
-    budget: number; // Actual column name is 'budget', not 'total_cost'
+    budget: number; // This will be mapped from the 'amount' column
     start_date: string;
     end_date: string;
     status_id: string; // UUID
@@ -31,7 +31,7 @@ export interface ProjectWithJoins {
     project_id: string;
     title: string;
     description: string;
-    budget: number;
+    amount: number; // Database column name
     start_date: string;
     end_date: string;
     status_id: string;

@@ -23,7 +23,7 @@ interface ApiProjectResponse {
   project_id: string;
   title: string;
   description: string;
-  amount?: number;
+  budget?: number; // This comes from the API (mapped from amount)
   status_id: string;
   contractor_id: string;
   location_id: string;
@@ -100,8 +100,8 @@ export class ProjectsService {
       projectId: project.project_id,
       title: project.title,
       description: project.description,
-      amount: project.amount || 0,
-      amountFormatted: `₱${(project.amount || 0).toLocaleString()}`,
+      amount: project.budget || 0,
+      amountFormatted: `₱${(project.budget || 0).toLocaleString()}`,
       statusId: project.status_id,
       contractorId: project.contractor_id,
       locationId: project.location_id,
@@ -147,8 +147,8 @@ export class ProjectsService {
       projectId: project.project_id,
       title: project.title,
       description: project.description,
-      amount: project.amount || 0,
-      amountFormatted: `₱${(project.amount || 0).toLocaleString()}`,
+      amount: project.budget || 0,
+      amountFormatted: `₱${(project.budget || 0).toLocaleString()}`,
       statusId: project.status_id,
       contractorId: project.contractor_id,
       locationId: project.location_id,

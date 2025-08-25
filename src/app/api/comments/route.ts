@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { commentsRepository, query } from '@/lib/database/config';
+import { query } from '@/lib/database/config';
 import { optionalAuth, authenticateUser } from '@/lib/auth/config';
 
 export async function GET(request: NextRequest) {
