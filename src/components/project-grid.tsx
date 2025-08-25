@@ -1,167 +1,95 @@
-import { ProjectCard } from "@/components/project-card"
+"use client"
 
-// Mock data for projects
-const mockProjects = [
-  {
-    id: "1",
-    title: "Metro Manila Subway Project - Phase 1",
-    description:
-      "Construction of the first phase of the Metro Manila Subway system connecting Quezon City to Pasay City.",
-    amount: "₱357,000,000,000",
-    contractor: "Tokyo Metro Co. Ltd. & DMCI Holdings",
-    location: "Metro Manila",
-    status: "in-progress",
-    progress: 65,
-    likes: 1247,
-    dislikes: 89,
-    comments: 234,
-    image: "/subway-construction-site-philippines.png",
-    expectedOutcome: "Reduce travel time by 50% and ease traffic congestion",
-    personnel: "Secretary Arthur Tugade, Project Manager Juan Santos",
-    reason: "Address severe traffic congestion in Metro Manila",
-    startDate: new Date("2022-01-15"),
-    expectedCompletionDate: new Date("2027-12-31"),
-    milestones: [
-      { title: "Groundbreaking", date: new Date("2022-01-15"), completed: true },
-      { title: "Tunnel Boring Start", date: new Date("2023-06-01"), completed: true },
-      { title: "50% Completion", date: new Date("2025-01-01"), completed: false },
-      { title: "Expected Completion", date: new Date("2027-12-31"), completed: false },
-    ],
-  },
-  {
-    id: "2",
-    title: "Cebu-Cordova Link Expressway",
-    description: "An 8.9-kilometer toll bridge connecting Cebu City and Cordova town in Mactan Island.",
-    amount: "₱30,000,000,000",
-    contractor: "Cebu Cordova Link Expressway Corporation",
-    location: "Cebu",
-    status: "completed",
-    progress: 100,
-    likes: 892,
-    dislikes: 45,
-    comments: 156,
-    image: "/modern-bridge-philippines-cebu.png",
-    expectedOutcome: "Improve connectivity and boost economic growth",
-    personnel: "Governor Gwendolyn Garcia, Engineer Maria Cruz",
-    reason: "Enhance transportation between Cebu City and Mactan Island",
-    startDate: new Date("2017-07-01"),
-    expectedCompletionDate: new Date("2022-04-27"),
-    milestones: [
-      { title: "Groundbreaking", date: new Date("2017-07-01"), completed: true },
-      { title: "Bridge Span Completion", date: new Date("2021-12-01"), completed: true },
-      { title: "Opening", date: new Date("2022-04-27"), completed: true },
-    ],
-  },
-  {
-    id: "3",
-    title: "New Clark City Government Center",
-    description: "Construction of a modern government center in New Clark City, Tarlac.",
-    amount: "₱9,500,000,000",
-    contractor: "Megawide Construction Corporation",
-    location: "Tarlac",
-    status: "upcoming",
-    progress: 0,
-    likes: 567,
-    dislikes: 123,
-    comments: 89,
-    image: "/modern-government-building-philippines.png",
-    expectedOutcome: "Decentralize government operations and create jobs",
-    personnel: "BCDA President Vince Dizon, Architect Anna Reyes",
-    reason: "Support the development of New Clark City as a smart city",
-    startDate: new Date("2026-03-01"),
-    expectedCompletionDate: new Date("2029-12-31"),
-    milestones: [
-      { title: "Planning", date: new Date("2025-09-01"), completed: false },
-      { title: "Groundbreaking", date: new Date("2026-03-01"), completed: false },
-      { title: "Expected Completion", date: new Date("2029-12-31"), completed: false },
-    ],
-  },
-  {
-    id: "4",
-    title: "Mindanao Railway Project - Phase 1",
-    description: "Railway system connecting Tagum, Davao City, and Digos City in Mindanao.",
-    amount: "₱35,000,000,000",
-    contractor: "China Railway Group Limited",
-    location: "Davao",
-    status: "in-progress",
-    progress: 25,
-    likes: 734,
-    dislikes: 167,
-    comments: 201,
-    image: "/railway-construction-philippines-mindanao.png",
-    expectedOutcome: "Improve transportation and economic development in Mindanao",
-    personnel: "DOTr Undersecretary Timothy Batan, Engineer Roberto Silva",
-    reason: "Enhance connectivity in Southern Philippines",
-    startDate: new Date("2023-02-01"),
-    expectedCompletionDate: new Date("2028-06-30"),
-    milestones: [
-      { title: "Groundbreaking", date: new Date("2023-02-01"), completed: true },
-      { title: "Track Laying Start", date: new Date("2025-01-01"), completed: false },
-      { title: "Expected Completion", date: new Date("2028-06-30"), completed: false },
-    ],
-  },
-  {
-    id: "5",
-    title: "Iloilo Flood Control Project",
-    description: "Comprehensive flood control system for Iloilo City including pumping stations and drainage.",
-    amount: "₱12,800,000,000",
-    contractor: "EEI Corporation & Sumitomo Mitsui",
-    location: "Iloilo",
-    status: "in-progress",
-    progress: 78,
-    likes: 445,
-    dislikes: 34,
-    comments: 67,
-    image: "/flood-control-drainage-system-philippines.png",
-    expectedOutcome: "Protect 500,000 residents from flooding",
-    personnel: "Mayor Jerry Treñas, Engineer Lisa Fernandez",
-    reason: "Address recurring flood problems during typhoon season",
-    startDate: new Date("2021-08-01"),
-    expectedCompletionDate: new Date("2025-11-30"),
-    milestones: [
-      { title: "Planning", date: new Date("2020-12-01"), completed: true },
-      { title: "Construction Start", date: new Date("2021-08-01"), completed: true },
-      { title: "Expected Completion", date: new Date("2025-11-30"), completed: false },
-    ],
-  },
-  {
-    id: "6",
-    title: "Bohol-Panglao International Airport Terminal",
-    description: "New international airport terminal to boost tourism in Bohol province.",
-    amount: "₱8,900,000,000",
-    contractor: "Megawide Construction Corporation",
-    location: "Bohol",
-    status: "completed",
-    progress: 100,
-    likes: 1156,
-    dislikes: 23,
-    comments: 298,
-    image: "/modern-airport-terminal-philippines-bohol.png",
-    expectedOutcome: "Increase tourist arrivals by 300%",
-    personnel: "Governor Arthur Yap, Airport Manager Carlos Mendoza",
-    reason: "Support tourism growth and economic development",
-    startDate: new Date("2018-06-01"),
-    expectedCompletionDate: new Date("2021-11-27"),
-    milestones: [
-      { title: "Groundbreaking", date: new Date("2018-06-01"), completed: true },
-      { title: "Terminal Completion", date: new Date("2021-10-01"), completed: true },
-      { title: "Opening", date: new Date("2021-11-27"), completed: true },
-    ],
-  },
-]
+import { ProjectCard } from "@/components/project-card"
+import { ProjectWithDetails } from "@/models/dim-models/dim-project"
+import { ProjectsService } from "@/services/projectsService"
+import { useEffect, useState } from "react"
 
 export function ProjectGrid() {
+  const [projects, setProjects] = useState<ProjectWithDetails[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [total, setTotal] = useState(0)
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setLoading(true)
+        const response = await ProjectsService.getProjects({
+          limit: 12, // Get more projects for the grid
+          page: 1
+        })
+        setProjects(response.projects)
+        setTotal(response.total)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch projects')
+        console.error('Error fetching projects:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProjects()
+  }, [])
+
+  if (loading) {
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-foreground font-[family-name:var(--font-space-grotesk)]">
+            Government Projects
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="animate-pulse">
+              <div className="bg-gray-200 h-48 rounded-t-lg"></div>
+              <div className="p-4 bg-white rounded-b-lg border">
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded mb-2 w-3/4"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-foreground font-[family-name:var(--font-space-grotesk)]">
+            Government Projects
+          </h2>
+        </div>
+        <div className="text-center py-8">
+          <p className="text-red-600 mb-4">Error loading projects: {error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-foreground font-[family-name:var(--font-space-grotesk)]">
           Government Projects
         </h2>
-        <div className="text-sm text-muted-foreground">Showing {mockProjects.length} of 1,247 projects</div>
+        <div className="text-sm text-muted-foreground">
+          Showing {projects.length} of {(total || 0).toLocaleString()} projects
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mockProjects.map((project) => (
+        {projects.map((project) => (
           <ProjectCard key={project.id} project={project} />
         ))}
       </div>

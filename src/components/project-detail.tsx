@@ -10,9 +10,9 @@ import Image from "next/image"
 import { CommentSection } from "@/components/comment-section"
 import { useState } from "react"
 
-import type { Project as ProjectModel } from "@/models/dim-models/dim-project"
+import type { ProjectWithDetails } from "@/models/dim-models/dim-project"
 
-interface Project extends Omit<ProjectModel, "image" | "milestones"> {
+interface Project extends Omit<ProjectWithDetails, "image" | "milestones"> {
   images: string[]
   milestones: Array<{
     title: string
@@ -203,7 +203,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
           </Card>
 
           {/* Comments Section */}
-          <CommentSection projectId={project.id} />
+          <CommentSection projectId={project.id || project.projectId} />
         </div>
 
         {/* Sidebar */}
@@ -220,7 +220,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                     <span>Completion</span>
                     <span className="font-semibold">{project.progress}%</span>
                   </div>
-                  <Progress value={project.progress} className="h-3" />
+                  <Progress value={parseFloat(project.progress) || 0} className="h-3" />
                 </div>
               </CardContent>
             </Card>
@@ -237,7 +237,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                   <Building className="w-4 h-4 mr-1" />
                   Budget
                 </div>
-                <p className="font-semibold text-lg text-foreground">{project.amount}</p>
+                <p className="font-semibold text-lg text-foreground">{project.amountFormatted || `₱${project.amount.toLocaleString()}`}</p>
               </div>
 
               <Separator />

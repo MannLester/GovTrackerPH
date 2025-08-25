@@ -1,45 +1,108 @@
+"use client"
+
 import { ProjectDetail } from "@/components/project-detail"
 import { Header } from "@/components/header"
+import { ProjectsService } from "@/services/projectsService"
+import { ProjectWithDetails } from "@/models/dim-models/dim-project"
+import { useEffect, useState } from "react"
+import { useParams } from "next/navigation"
 
-// Mock data - in real app this would come from your database
-const mockProject = {
-  id: "1",
-  title: "Metro Manila Subway Project - Phase 1",
-  description:
-    "Construction of the first phase of the Metro Manila Subway system connecting Quezon City to Pasay City. This ambitious infrastructure project aims to provide a fast, reliable, and modern transportation system for Metro Manila residents.",
-  amount: "₱357,000,000,000",
-  contractor: "Tokyo Metro Co. Ltd. & DMCI Holdings",
-  location: "Metro Manila",
-  status: "in-progress",
-  progress: 65,
-  likes: 1247,
-  dislikes: 89,
-  comments: 234,
-  images: ["/subway-construction-site-philippines.png", "/subway-tunnel-boring-machine-philippines.png", "/subway-station-construction-philippines.png"],
-  expectedOutcome:
-    "Reduce travel time by 50% and ease traffic congestion in Metro Manila. Expected to serve 370,000 passengers daily.",
-  personnel:
-    "Secretary Arthur Tugade (DOTr), Project Manager Juan Santos (DMCI), Chief Engineer Hiroshi Tanaka (Tokyo Metro)",
-  reason: "Address severe traffic congestion in Metro Manila and provide sustainable public transportation",
-  startDate: new Date("2019-02-27"),
-  expectedCompletionDate: new Date("2025-12-31"),
-  milestones: [
-    { title: "Ground Breaking", date: new Date("2019-02-27"), completed: true },
-    { title: "Tunnel Boring Completion", date: new Date("2023-06-15"), completed: true },
-    { title: "Station Construction", date: new Date("2024-03-30"), completed: false },
-    { title: "Systems Installation", date: new Date("2024-09-15"), completed: false },
-    { title: "Testing & Commissioning", date: new Date("2025-06-30"), completed: false },
-    { title: "Commercial Operations", date: new Date("2025-12-31"), completed: false },
-  ],
+interface Project extends Omit<ProjectWithDetails, "image" | "milestones"> {
+  images: string[]
+  milestones: Array<{
+    title: string
+    date: Date
+    completed: boolean
+  }>
 }
 
-export default function ProjectPage({ params }: { params: { id: string } }) {
-  return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="container mx-auto px-4 py-8">
-        <ProjectDetail project={mockProject} />
+export default function ProjectPage() {
+  const params = useParams()
+  const projectId = params?.id as string
+  
+  const [project, setProject] = useState<Project | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchProject = async () => {
+      if (!projectId) return
+      
+      try {
+        setLoading(true)
+        const projectData = await ProjectsService.getProject(projectId)
+        
+        // Transform the project data to match the ProjectDetail component expectations
+        const transformedProject: Project = {
+          ...projectData,
+          images: projectData.images || [projectData.image || "/placeholder.svg"],
+          milestones: projectData.milestones || []
+        }
+        
+        setProject(transformedProject)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch project')
+        console.error('Error fetching project:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProject()
+  }, [projectId])
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded mb-4 w-1/3"></div>
+            <div className="h-64 bg-gray-200 rounded mb-4"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 space-y-6">
+                <div className="h-32 bg-gray-200 rounded"></div>
+                <div className="h-32 bg-gray-200 rounded"></div>
+              </div>
+              <div className="space-y-6">
+                <div className="h-24 bg-gray-200 rounded"></div>
+                <div className="h-32 bg-gray-200 rounded"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </main>
-    </div>
+    )
+  }
+
+  if (error || !project) {
+    return (
+      <main className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center py-8">
+            <h1 className="text-2xl font-bold mb-4">Project Not Found</h1>
+            <p className="text-gray-600 mb-4">
+              {error || "The project you're looking for doesn't exist."}
+            </p>
+            <button 
+              onClick={() => window.history.back()} 
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Go Back
+            </button>
+          </div>
+        </div>
+      </main>
+    )
+  }
+
+  return (
+    <main className="min-h-screen bg-background">
+      <Header />
+      <div className="container mx-auto px-4 py-8">
+        <ProjectDetail project={project} />
+      </div>
+    </main>
   )
 }

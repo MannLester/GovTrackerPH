@@ -5,10 +5,10 @@ import { Progress } from "@/components/ui/progress"
 import { ThumbsUp, ThumbsDown, MessageCircle, MapPin, Flag } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { Project } from "@/models/dim-models/dim-project"
+import { ProjectWithDetails } from "@/models/dim-models/dim-project"
 
 interface ProjectCardProps {
-  project: Project
+  project: ProjectWithDetails
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
@@ -75,7 +75,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Budget:</span>
-            <span className="font-semibold text-gray-900">{project.amount}</span>
+            <span className="font-semibold text-gray-900">{project.amountFormatted || `₱${project.amount.toLocaleString()}`}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Contractor:</span>
@@ -89,7 +89,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
               <span className="text-gray-600">Progress:</span>
               <span className="font-semibold text-gray-900">{project.progress}%</span>
             </div>
-            <Progress value={project.progress} className="h-2" />
+            <Progress value={parseFloat(project.progress) || 0} className="h-2" />
           </div>
         )}
 
@@ -113,7 +113,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
             </Button>
           </div>
           <div className="flex gap-2">
-            <Link href={`/project/${project.id}`} className="flex-1">
+            <Link href={`/project/${project.id || project.projectId}`} className="flex-1">
               <Button size="sm" variant="outline" className="w-full bg-transparent">
                 View Details
               </Button>
