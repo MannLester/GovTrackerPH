@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator"
 import { ThumbsUp, ThumbsDown, MapPin, Calendar, User, Building, Target, Clock, CheckCircle } from "lucide-react"
 import Image from "next/image"
 import { CommentSection } from "@/components/comment-section"
+import { getStatusColor, getStatusText } from "@/components/status-legend"
 import { useState } from "react"
 
 import type { ProjectWithDetails } from "@/models/dim-models/dim-project"
@@ -58,28 +59,13 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
     }
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "bg-green-100 text-green-800 border-green-200"
-      case "in-progress":
-        return "bg-blue-100 text-blue-800 border-blue-200"
-      case "upcoming":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200"
-      case "delayed":
-        return "bg-red-100 text-red-800 border-red-200"
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200"
-    }
-  }
-
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       {/* Header Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <Badge className={getStatusColor(project.status)}>
-            {project.status.charAt(0).toUpperCase() + project.status.slice(1).replace("-", " ")}
+            {getStatusText(project.status)}
           </Badge>
           <div className="flex items-center space-x-2">
             <Button
