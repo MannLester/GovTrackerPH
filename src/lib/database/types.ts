@@ -45,7 +45,7 @@ export interface ProjectWithJoins {
     updated_at: string;
     dim_status?: { status_name: string };
     dim_location?: { region: string; province: string; city: string; barangay: string };
-    dim_contractor?: { contractor_name: string };
+    dim_contractor?: { company_name: string };
 }
 
 export interface LocationResponse {

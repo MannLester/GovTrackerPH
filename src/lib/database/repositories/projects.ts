@@ -23,6 +23,15 @@ export class ProjectsRepository {
                     *,
                     dim_status:status_id (
                         status_name
+                    ),
+                    dim_contractor:contractor_id (
+                        company_name
+                    ),
+                    dim_location:location_id (
+                        region,
+                        province,
+                        city,
+                        barangay
                     )
                 `, { count: 'exact' });
 
@@ -63,7 +72,14 @@ export class ProjectsRepository {
                 created_at: item.created_at,
                 updated_at: item.updated_at,
                 // Extract status name from joined data
-                status_name: item.dim_status?.status_name
+                status_name: item.dim_status?.status_name,
+                // Extract contractor name from joined data
+                contractor_name: item.dim_contractor?.company_name,
+                // Extract location data from joined data
+                region: item.dim_location?.region,
+                province: item.dim_location?.province,
+                city: item.dim_location?.city,
+                barangay: item.dim_location?.barangay
             }));
 
             const totalCount = count || 0;
@@ -97,6 +113,15 @@ export class ProjectsRepository {
                     *,
                     dim_status:status_id (
                         status_name
+                    ),
+                    dim_contractor:contractor_id (
+                        company_name
+                    ),
+                    dim_location:location_id (
+                        region,
+                        province,
+                        city,
+                        barangay
                     )
                 `)
                 .eq('project_id', projectId)
@@ -132,7 +157,14 @@ export class ProjectsRepository {
                 created_at: data.created_at,
                 updated_at: data.updated_at,
                 // Extract status name from joined data
-                status_name: data.dim_status?.status_name
+                status_name: data.dim_status?.status_name,
+                // Extract contractor name from joined data
+                contractor_name: data.dim_contractor?.company_name,
+                // Extract location data from joined data
+                region: data.dim_location?.region,
+                province: data.dim_location?.province,
+                city: data.dim_location?.city,
+                barangay: data.dim_location?.barangay
             };
 
             console.log(`✅ Successfully fetched project: ${project.title}`);
