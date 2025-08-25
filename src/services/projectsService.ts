@@ -2,6 +2,13 @@ import { ProjectWithDetails } from '@/models/dim-models/dim-project';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
+// Utility function to safely parse dates
+const safeDate = (dateString: string | null | undefined): Date => {
+  if (!dateString) return new Date();
+  const date = new Date(dateString);
+  return isNaN(date.getTime()) ? new Date() : date;
+};
+
 export interface ProjectsResponse {
   projects: ProjectWithDetails[];
   total: number;
@@ -33,7 +40,7 @@ interface ApiProjectResponse {
   personnel?: string;
   reason?: string;
   start_date: string;
-  expected_completion_date: string;
+  end_date: string; // Database field name
   created_at: string;
   status_name?: string;
   contractor_name?: string;
@@ -114,9 +121,9 @@ export class ProjectsService {
       expectedOurcome: project.expected_outcome || "",
       personnel: project.personnel || "",
       reason: project.reason || "",
-      startDate: new Date(project.start_date),
-      expectedCompletionDate: new Date(project.expected_completion_date),
-      createdAt: new Date(project.created_at),
+      startDate: safeDate(project.start_date),
+      expectedCompletionDate: safeDate(project.end_date),
+      createdAt: safeDate(project.created_at),
       likes: project.likes || 0,
       dislikes: project.dislikes || 0,
       comments: project.comments || 0,
@@ -124,7 +131,7 @@ export class ProjectsService {
       images: project.images || [],
       milestones: project.milestones?.map(m => ({
         title: m.title,
-        date: new Date(m.date),
+        date: safeDate(m.date),
         completed: m.completed
       })) || [],
     }));
@@ -161,9 +168,9 @@ export class ProjectsService {
       expectedOurcome: project.expected_outcome || "",
       personnel: project.personnel || "",
       reason: project.reason || "",
-      startDate: new Date(project.start_date),
-      expectedCompletionDate: new Date(project.expected_completion_date),
-      createdAt: new Date(project.created_at),
+      startDate: safeDate(project.start_date),
+      expectedCompletionDate: safeDate(project.end_date),
+      createdAt: safeDate(project.created_at),
       likes: project.likes || 0,
       dislikes: project.dislikes || 0,
       comments: project.comments || 0,
@@ -171,7 +178,7 @@ export class ProjectsService {
       images: project.images || [],
       milestones: project.milestones?.map(m => ({
         title: m.title,
-        date: new Date(m.date),
+        date: safeDate(m.date),
         completed: m.completed
       })) || [],
     };
