@@ -1,13 +1,27 @@
-export interface FactProjectLikes{
-    user_id: string;
+export interface ProjectLike {
+    like_id: string;
     project_id: string;
-    is_like: boolean;
-    created_at: Date;
+    user_id: string;
+    created_at?: Date;
 }
 
-export const FactProjectLikesSchema = {
-    user_id: String,
+// CRUD Interfaces
+export interface CreateProjectLikeRequest {
+    project_id: string;
+    user_id: string;
+}
+
+export interface DeleteProjectLikeRequest {
+    like_id: string;
+}
+
+export interface GetProjectLikeRequest {
+    like_id: string;
+}
+
+export const ProjectLikeSchema = {
+    like_id: String,
     project_id: String,
-    is_like: Boolean,
-    created_at: Date,
+    user_id: String,
+    created_at: Date
 }
