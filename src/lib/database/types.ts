@@ -38,6 +38,7 @@ export interface ProjectWithJoins {
     location_id: string;
     contractor_id: string;
     progress_percentage: number;
+    progress: number; // New progress column in database
     expected_outcome: string;
     reason: string;
     created_by: string;

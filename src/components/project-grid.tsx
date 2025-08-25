@@ -1,7 +1,6 @@
 "use client"
 
 import { ProjectCard } from "@/components/project-card"
-import { StatusLegend } from "@/components/status-legend"
 import { ProjectWithDetails } from "@/models/dim-models/dim-project"
 import { ProjectsService } from "@/services/projectsService"
 import { useEffect, useState } from "react"
@@ -87,11 +86,6 @@ export function ProjectGrid() {
         <div className="text-sm text-muted-foreground">
           Showing {projects.length} of {(total || 0).toLocaleString()} projects
         </div>
-      </div>
-
-      {/* Status Legend */}
-      <div className="mb-8 p-4 bg-gray-50 rounded-lg border">
-        <StatusLegend compact={true} showDescriptions={false} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

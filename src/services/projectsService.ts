@@ -27,7 +27,7 @@ interface ApiProjectResponse {
   status_id: string;
   contractor_id: string;
   location_id: string;
-  progress?: string;
+  progress_percentage?: number; // This comes from the API (mapped from database progress)
   expected_outcome?: string;
   expectedOurcome?: string;
   personnel?: string;
@@ -108,8 +108,8 @@ export class ProjectsService {
       status: project.status_name || project.status_id,
       contractor: project.contractor_name || project.contractor_id,
       location: project.location_name || `${project.city}, ${project.region}` || project.location_id,
-      progress: project.progress || "0",
-      progressNumber: parseFloat(project.progress || "0"),
+      progress: (project.progress_percentage || 0).toString(),
+      progressNumber: project.progress_percentage || 0,
       expectedOutcome: project.expected_outcome || project.expectedOurcome || "",
       expectedOurcome: project.expected_outcome || "",
       personnel: project.personnel || "",
@@ -155,8 +155,8 @@ export class ProjectsService {
       status: project.status_name || project.status_id,
       contractor: project.contractor_name || project.contractor_id,
       location: project.location_name || `${project.city}, ${project.region}` || project.location_id,
-      progress: project.progress || "0",
-      progressNumber: parseFloat(project.progress || "0"),
+      progress: (project.progress_percentage || 0).toString(),
+      progressNumber: project.progress_percentage || 0,
       expectedOutcome: project.expected_outcome || project.expectedOurcome || "",
       expectedOurcome: project.expected_outcome || "",
       personnel: project.personnel || "",
