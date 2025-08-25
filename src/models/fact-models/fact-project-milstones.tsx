@@ -1,4 +1,4 @@
-export interface FactProjectMMilestones{
+export interface FactProjectMilestones{
     milestoneId: string;
     projectId: string;
     title: string;
