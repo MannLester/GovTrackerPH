@@ -6,42 +6,13 @@ import { ThumbsUp, ThumbsDown, MessageCircle, MapPin, Flag } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { ProjectWithDetails } from "@/models/dim-models/dim-project"
+import { getStatusColor, getStatusText } from "@/components/status-legend"
 
 interface ProjectCardProps {
   project: ProjectWithDetails
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "bg-green-100 text-green-800 border-green-200"
-      case "in-progress":
-        return "bg-blue-100 text-blue-800 border-blue-200"
-      case "upcoming":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200"
-      case "delayed":
-        return "bg-red-100 text-red-800 border-red-200"
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200"
-    }
-  }
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "Completed"
-      case "in-progress":
-        return "In Progress"
-      case "upcoming":
-        return "Upcoming"
-      case "delayed":
-        return "Delayed"
-      default:
-        return status
-    }
-  }
-
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
       <div className="relative">
@@ -83,7 +54,9 @@ export function ProjectCard({ project }: ProjectCardProps) {
           </div>
         </div>
 
-        {project.status === "in-progress" && (
+        {(getStatusText(project.status).toLowerCase().includes("progress") || 
+          getStatusText(project.status).toLowerCase().includes("ongoing") ||
+          getStatusText(project.status).toLowerCase().includes("active")) && (
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Progress:</span>

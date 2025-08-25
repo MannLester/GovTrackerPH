@@ -16,10 +16,15 @@ export class ProjectsRepository {
 
             console.log('📍 Fetching projects with filters:', filters);
 
-            // Start with a simple query first to test the structure
+            // Start with a query that joins with status table to get status names
             let query = supabase
                 .from('dim_project')
-                .select('*', { count: 'exact' });
+                .select(`
+                    *,
+                    dim_status:status_id (
+                        status_name
+                    )
+                `, { count: 'exact' });
 
             // Apply simple filters for now
             if (search) {
@@ -56,7 +61,9 @@ export class ProjectsRepository {
                 reason: item.reason,
                 created_by: item.created_by,
                 created_at: item.created_at,
-                updated_at: item.updated_at
+                updated_at: item.updated_at,
+                // Extract status name from joined data
+                status_name: item.dim_status?.status_name
             }));
 
             const totalCount = count || 0;
@@ -86,7 +93,12 @@ export class ProjectsRepository {
 
             const { data, error } = await supabase
                 .from('dim_project')
-                .select('*')
+                .select(`
+                    *,
+                    dim_status:status_id (
+                        status_name
+                    )
+                `)
                 .eq('project_id', projectId)
                 .single();
 
@@ -107,7 +119,7 @@ export class ProjectsRepository {
                 project_id: data.project_id,
                 title: data.title,
                 description: data.description,
-                budget: data.budget,
+                budget: data.amount,
                 start_date: data.start_date,
                 end_date: data.end_date,
                 status_id: data.status_id,
@@ -118,7 +130,9 @@ export class ProjectsRepository {
                 reason: data.reason,
                 created_by: data.created_by,
                 created_at: data.created_at,
-                updated_at: data.updated_at
+                updated_at: data.updated_at,
+                // Extract status name from joined data
+                status_name: data.dim_status?.status_name
             };
 
             console.log(`✅ Successfully fetched project: ${project.title}`);
