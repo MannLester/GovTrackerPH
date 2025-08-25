@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress"
 import { ThumbsUp, ThumbsDown, MessageCircle, MapPin, Flag } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { Project } from "@/models/project-model"
+import { Project } from "@/models/dim-models/dim-project"
 
 interface ProjectCardProps {
   project: Project

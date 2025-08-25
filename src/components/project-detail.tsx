@@ -10,7 +10,7 @@ import Image from "next/image"
 import { CommentSection } from "@/components/comment-section"
 import { useState } from "react"
 
-import type { Project as ProjectModel } from "@/models/project-model"
+import type { Project as ProjectModel } from "@/models/dim-models/dim-project"
 
 interface Project extends Omit<ProjectModel, "image" | "milestones"> {
   images: string[]
