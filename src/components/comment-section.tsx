@@ -5,89 +5,134 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ThumbsUp, ThumbsDown, Reply, Flag } from "lucide-react"
-import { useState } from "react"
-import { Comment } from "@/models/dim-models/dim-comment"
+import { useState, useEffect } from "react"
 
 interface CommentSectionProps {
   projectId: string
 }
 
-// Mock comments data
-const mockComments: Comment[] = [
-  {
-    id: "1",
-    author: "Maria Santos",
-    avatar: "/filipino-woman-avatar.png",
-    content:
-      "This subway project is exactly what Metro Manila needs! The traffic situation has been getting worse every year. I hope they can finish this on schedule.",
-    timestamp: "2 hours ago",
-    likes: 24,
-    dislikes: 2,
-    replies: [
-      {
-        id: "1-1",
-        author: "Juan Dela Cruz",
-        avatar: "/filipino-man-avatar.png",
-        content:
-          "I agree! But I'm concerned about the budget. ₱357 billion is a huge amount. I hope there's proper oversight.",
-        timestamp: "1 hour ago",
-        likes: 12,
-        dislikes: 1,
-        replies: [],
-      },
-    ],
-  },
-  {
-    id: "2",
-    author: "Carlos Reyes",
-    avatar: "/filipino-businessman-avatar.png",
-    content:
-      "As someone who commutes daily from QC to Makati, this project can't come soon enough. The current MRT system is overcrowded and unreliable.",
-    timestamp: "4 hours ago",
-    likes: 18,
-    dislikes: 0,
-    replies: [],
-  },
-  {
-    id: "3",
-    author: "Ana Gonzales",
-    avatar: "/filipino-professional-woman-avatar.png",
-    content:
-      "I'm worried about the environmental impact. Has there been a proper environmental assessment? We need to make sure this doesn't harm our communities.",
-    timestamp: "6 hours ago",
-    likes: 15,
-    dislikes: 8,
-    replies: [
-      {
-        id: "3-1",
-        author: "Engineer Mike Torres",
-        avatar: "/filipino-engineer-avatar.png",
-        content:
-          "Good point Ana. From what I know, they did conduct environmental impact studies. The project actually reduces carbon emissions by providing clean public transport.",
-        timestamp: "5 hours ago",
-        likes: 22,
-        dislikes: 1,
-        replies: [],
-      },
-    ],
-  },
-]
+interface CommentWithUser {
+  commentId: string;
+  userId: string;
+  projectId: string;
+  content: string;
+  createdAt: string;
+  parentCommentId: string | null;
+  // User info
+  userName: string;
+  userAvatar: string | null;
+  // Additional fields we might get from API
+  likes?: number;
+  dislikes?: number;
+  replies?: CommentWithUser[];
+}
+
+interface ApiComment {
+  comment_id: string;
+  user_id: string;
+  project_id: string;
+  content: string;
+  created_at: string;
+  parent_comment_id: string | null;
+  author_name: string;
+  author_avatar: string | null;
+  like_count: number;
+}
 
 export function CommentSection({ projectId }: CommentSectionProps) {
-  const [comments, setComments] = useState<Comment[]>(mockComments)
+  const [comments, setComments] = useState<CommentWithUser[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [newComment, setNewComment] = useState("")
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [replyContent, setReplyContent] = useState("")
 
-  const handleSubmitComment = () => {
+  console.log('🔍 CommentSection rendered with projectId:', projectId)
+
+  // Fetch comments from the API
+  useEffect(() => {
+    const fetchComments = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        console.log(`Fetching comments for project: ${projectId}`)
+        const response = await fetch(`/api/comments?projectId=${projectId}`)
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch comments: ${response.status} ${response.statusText}`)
+        }
+        
+        const data = await response.json()
+        console.log('Comments API response:', data)
+        
+        if (data.success && data.data?.comments) {
+          // Organize comments with their replies
+          const mainComments = data.data.comments.filter((comment: ApiComment) => !comment.parent_comment_id)
+          const replies = data.data.comments.filter((comment: ApiComment) => comment.parent_comment_id)
+          
+          // Attach replies to their parent comments
+          const commentsWithReplies = mainComments.map((comment: ApiComment) => ({
+            commentId: comment.comment_id,
+            userId: comment.user_id,
+            projectId: comment.project_id,
+            content: comment.content,
+            createdAt: comment.created_at,
+            parentCommentId: comment.parent_comment_id,
+            userName: comment.author_name || 'Unknown User',
+            userAvatar: comment.author_avatar,
+            likes: comment.like_count || 0,
+            dislikes: 0, // TODO: Add dislikes support
+            replies: replies
+              .filter((reply: ApiComment) => reply.parent_comment_id === comment.comment_id)
+              .map((reply: ApiComment) => ({
+                commentId: reply.comment_id,
+                userId: reply.user_id,
+                projectId: reply.project_id,
+                content: reply.content,
+                createdAt: reply.created_at,
+                parentCommentId: reply.parent_comment_id,
+                userName: reply.author_name || 'Unknown User',
+                userAvatar: reply.author_avatar,
+                likes: reply.like_count || 0,
+                dislikes: 0
+              }))
+          }))
+          
+          setComments(commentsWithReplies)
+        } else {
+          setComments([])
+        }
+      } catch (err) {
+        console.error('Error fetching comments:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load comments')
+        setComments([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (projectId) {
+      console.log('🚀 Triggering fetchComments for projectId:', projectId)
+      fetchComments()
+    } else {
+      console.log('⚠️ No projectId provided, skipping fetchComments')
+    }
+  }, [projectId])
+
+  const handleSubmitComment = async () => {
     if (!newComment.trim()) return
 
-    const comment: Comment = {
-      id: Date.now().toString(),
-      author: "You",
-      avatar: "/diverse-user-avatars.png",
+    // TODO: Implement API call to create new comment
+    const comment: CommentWithUser = {
+      commentId: Date.now().toString(),
+      userId: "current-user", // TODO: Get from auth context
+      projectId: projectId,
       content: newComment,
-      timestamp: "Just now",
+      createdAt: new Date().toISOString(),
+      parentCommentId: null,
+      userName: "You",
+      userAvatar: "/diverse-user-avatars.png",
       likes: 0,
       dislikes: 0,
       replies: [],
@@ -97,15 +142,19 @@ export function CommentSection({ projectId }: CommentSectionProps) {
     setNewComment("")
   }
 
-  const handleSubmitReply = (parentId: string) => {
+  const handleSubmitReply = async (parentId: string) => {
     if (!replyContent.trim()) return
 
-    const reply: Comment = {
-      id: `${parentId}-${Date.now()}`,
-      author: "You",
-      avatar: "/diverse-user-avatars.png",
+    // TODO: Implement API call to create new reply
+    const reply: CommentWithUser = {
+      commentId: `${parentId}-${Date.now()}`,
+      userId: "current-user", // TODO: Get from auth context
+      projectId: projectId,
       content: replyContent,
-      timestamp: "Just now",
+      createdAt: new Date().toISOString(),
+      parentCommentId: parentId,
+      userName: "You",
+      userAvatar: "/diverse-user-avatars.png",
       likes: 0,
       dislikes: 0,
       replies: [],
@@ -113,37 +162,42 @@ export function CommentSection({ projectId }: CommentSectionProps) {
 
     setComments(
       comments.map((comment) =>
-        comment.id === parentId ? { ...comment, replies: [...comment.replies, reply] } : comment,
+        comment.commentId === parentId ? { 
+          ...comment, 
+          replies: [...(comment.replies || []), reply] 
+        } : comment,
       ),
     )
     setReplyContent("")
     setReplyingTo(null)
   }
 
-  const CommentItem = ({ comment, isReply = false }: { comment: Comment; isReply?: boolean }) => (
+  const CommentItem = ({ comment, isReply = false }: { comment: CommentWithUser; isReply?: boolean }) => (
     <div className={`space-y-3 ${isReply ? "ml-12 border-l-2 border-border pl-4" : ""}`}>
       <div className="flex space-x-3">
         <Avatar className="w-8 h-8">
-          <AvatarImage src={comment.avatar || "/placeholder.svg"} alt={comment.author} />
-          <AvatarFallback>{comment.author.charAt(0)}</AvatarFallback>
+          <AvatarImage src={comment.userAvatar || "/placeholder.svg"} alt={comment.userName} />
+          <AvatarFallback>{comment.userName.charAt(0)}</AvatarFallback>
         </Avatar>
         <div className="flex-1 space-y-2">
           <div className="flex items-center space-x-2">
-            <span className="font-medium text-sm text-foreground">{comment.author}</span>
-            <span className="text-xs text-gray-500">{comment.timestamp}</span>
+            <span className="font-medium text-sm text-foreground">{comment.userName}</span>
+            <span className="text-xs text-gray-500">
+              {new Date(comment.createdAt).toLocaleString()}
+            </span>
           </div>
           <p className="text-sm text-foreground leading-relaxed">{comment.content}</p>
           <div className="flex items-center space-x-4">
             <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
               <ThumbsUp className="w-3 h-3 mr-1" />
-              {comment.likes}
+              {comment.likes || 0}
             </Button>
             <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
               <ThumbsDown className="w-3 h-3 mr-1" />
-              {comment.dislikes}
+              {comment.dislikes || 0}
             </Button>
             {!isReply && (
-              <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setReplyingTo(comment.id)}>
+              <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setReplyingTo(comment.commentId)}>
                 <Reply className="w-3 h-3 mr-1" />
                 Reply
               </Button>
@@ -154,7 +208,7 @@ export function CommentSection({ projectId }: CommentSectionProps) {
             </Button>
           </div>
 
-          {replyingTo === comment.id && (
+          {replyingTo === comment.commentId && (
             <div className="space-y-2 mt-3">
               <Textarea
                 placeholder="Write a reply..."
@@ -163,7 +217,7 @@ export function CommentSection({ projectId }: CommentSectionProps) {
                 className="min-h-[80px] bg-white text-black placeholder:text-gray-500 border border-gray-300"
               />
               <div className="flex space-x-2">
-                <Button size="sm" onClick={() => handleSubmitReply(comment.id)}>
+                <Button size="sm" onClick={() => handleSubmitReply(comment.commentId)}>
                   Post Reply
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => setReplyingTo(null)}>
@@ -175,10 +229,10 @@ export function CommentSection({ projectId }: CommentSectionProps) {
         </div>
       </div>
 
-      {comment.replies.length > 0 && (
+      {comment.replies && comment.replies.length > 0 && (
         <div className="space-y-3">
           {comment.replies.map((reply) => (
-            <CommentItem key={reply.id} comment={reply} isReply={true} />
+            <CommentItem key={reply.commentId} comment={reply} isReply={true} />
           ))}
         </div>
       )}
@@ -214,8 +268,13 @@ export function CommentSection({ projectId }: CommentSectionProps) {
 
         {/* Comments List */}
         <div className="space-y-6">
-          {comments.map((comment) => (
-            <CommentItem key={comment.id} comment={comment} />
+          {loading && <p>Loading comments...</p>}
+          {error && <p className="text-red-500">Error: {error}</p>}
+          {!loading && !error && comments.length === 0 && (
+            <p className="text-gray-500 text-center py-8">No comments yet. Be the first to comment!</p>
+          )}
+          {!loading && !error && comments.map((comment) => (
+            <CommentItem key={comment.commentId} comment={comment} />
           ))}
         </div>
       </CardContent>

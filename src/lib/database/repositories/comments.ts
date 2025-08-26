@@ -10,20 +10,43 @@ export interface CommentFilters {
     order?: 'ASC' | 'DESC';
 }
 
-// Database response type for comments
-interface CommentResponse {
-    comment_id: number;
+// Database response type for comments with user info
+interface CommentWithUserResponse {
+    comment_id: string;
     project_id: string;
     user_id: string;
     content: string;
     created_at: string;
     updated_at: string;
+    parent_comment_id: string | null;
+    is_deleted: boolean;
+    // User info from join
+    author_name: string;
+    author_avatar: string | null;
+    like_count: number;
+}
+
+// Raw database response type
+interface RawCommentResponse {
+    comment_id: string;
+    project_id: string;
+    user_id: string;
+    content: string;
+    created_at: string;
+    updated_at: string;
+    parent_comment_id: string | null;
+    is_deleted: boolean;
+    dim_user: {
+        first_name: string;
+        last_name: string;
+        profile_picture: string | null;
+    }[];
 }
 
 export class CommentsRepository {
     
-    // Get comments with pagination and filters
-    async getComments(filters: CommentFilters = {}): Promise<PaginatedResponse<Comment>> {
+    // Get comments with user information and pagination
+    async getComments(filters: CommentFilters = {}): Promise<PaginatedResponse<CommentWithUserResponse>> {
         try {
             const {
                 project_id,
@@ -36,10 +59,29 @@ export class CommentsRepository {
 
             console.log('📍 Fetching comments with filters:', filters);
 
-            // Start building the query
+            // Calculate pagination
+            const from = (page - 1) * limit;
+            const to = from + limit - 1;
+
+            // Build query with joins for user information
             let query = supabase
-                .from('fact_comment')
-                .select('*', { count: 'exact' });
+                .from('dim_comment')
+                .select(`
+                    comment_id,
+                    project_id,
+                    user_id,
+                    content,
+                    created_at,
+                    updated_at,
+                    parent_comment_id,
+                    is_deleted,
+                    dim_user!inner (
+                        first_name,
+                        last_name,
+                        profile_picture
+                    )
+                `, { count: 'exact' })
+                .eq('is_deleted', false);
 
             // Apply filters
             if (project_id) {
@@ -54,8 +96,6 @@ export class CommentsRepository {
             query = query.order(sort, { ascending: order === 'ASC' });
 
             // Apply pagination
-            const from = (page - 1) * limit;
-            const to = from + limit - 1;
             query = query.range(from, to);
 
             const { data, error, count } = await query;
@@ -64,14 +104,23 @@ export class CommentsRepository {
                 throw error;
             }
 
-            const comments: Comment[] = (data || []).map((item: CommentResponse) => ({
-                comment_id: item.comment_id,
-                project_id: item.project_id,
-                user_id: item.user_id,
-                content: item.content,
-                created_at: item.created_at,
-                updated_at: item.updated_at
-            }));
+            // Transform the data to include user info
+            const comments: CommentWithUserResponse[] = (data || []).map((item: RawCommentResponse) => {
+                const user = item.dim_user[0]; // Get first user from join
+                return {
+                    comment_id: item.comment_id,
+                    project_id: item.project_id,
+                    user_id: item.user_id,
+                    content: item.content,
+                    created_at: item.created_at,
+                    updated_at: item.updated_at,
+                    parent_comment_id: item.parent_comment_id,
+                    is_deleted: item.is_deleted,
+                    author_name: user ? `${user.first_name} ${user.last_name}` : 'Unknown User',
+                    author_avatar: user ? user.profile_picture : null,
+                    like_count: 0 // TODO: Add likes count logic
+                };
+            });
 
             const totalCount = count || 0;
             const totalPages = Math.ceil(totalCount / limit);
@@ -136,16 +185,19 @@ export class CommentsRepository {
     }
 
     // Create a new comment
-    async createComment(projectId: string, userId: string, content: string): Promise<Comment> {
+    async createComment(projectId: string, userId: string, content: string, parentCommentId?: string): Promise<CommentWithUserResponse> {
         try {
             console.log(`📍 Creating comment for project ${projectId} by user ${userId}`);
 
+            // Insert the comment
             const { data, error } = await supabase
-                .from('fact_comment')
+                .from('dim_comment')
                 .insert({
                     project_id: projectId,
                     user_id: userId,
-                    content: content
+                    content: content,
+                    parent_comment_id: parentCommentId || null,
+                    is_deleted: false
                 })
                 .select()
                 .single();
@@ -154,8 +206,51 @@ export class CommentsRepository {
                 throw error;
             }
 
-            console.log(`✅ Successfully created comment: ${data.comment_id}`);
-            return data as Comment;
+            // Get the comment with user info
+            const { data: commentWithUser, error: joinError } = await supabase
+                .from('dim_comment')
+                .select(`
+                    comment_id,
+                    project_id,
+                    user_id,
+                    content,
+                    created_at,
+                    updated_at,
+                    parent_comment_id,
+                    is_deleted,
+                    dim_user!inner (
+                        first_name,
+                        last_name,
+                        profile_picture
+                    )
+                `)
+                .eq('comment_id', data.comment_id)
+                .eq('is_deleted', false)
+                .single();
+
+            if (joinError) {
+                throw joinError;
+            }
+
+            // Transform to expected format
+            const rawComment = commentWithUser as RawCommentResponse;
+            const user = rawComment.dim_user[0];
+            const result: CommentWithUserResponse = {
+                comment_id: rawComment.comment_id,
+                project_id: rawComment.project_id,
+                user_id: rawComment.user_id,
+                content: rawComment.content,
+                created_at: rawComment.created_at,
+                updated_at: rawComment.updated_at,
+                parent_comment_id: rawComment.parent_comment_id,
+                is_deleted: rawComment.is_deleted,
+                author_name: user ? `${user.first_name} ${user.last_name}` : 'Unknown User',
+                author_avatar: user ? user.profile_picture : null,
+                like_count: 0
+            };
+
+            console.log(`✅ Successfully created comment: ${result.comment_id}`);
+            return result;
 
         } catch (error) {
             console.error('❌ Error creating comment:', error);
