@@ -8,7 +8,7 @@ export interface AuthUser {
     first_name: string;
     last_name: string;
     profile_picture: string | null;
-    role: 'admin' | 'user';
+    role: 'citizen' | 'admin' | 'personnel' | 'super-admin';
     created_at: string;
     updated_at: string;
 }
@@ -72,6 +72,22 @@ export const authenticateUser = async (request: NextRequest): Promise<AuthResult
 };
 
 // Simple admin check
-export const requireAdmin = (authResult: AuthResult): boolean => {
-    return authResult.user?.role === 'admin';
+export const requireAdmin = (user: AuthUser | null): boolean => {
+    return user?.role === 'admin' || user?.role === 'super-admin';
+};
+
+// Optional authentication - doesn't fail if no auth provided
+export const optionalAuth = async (request: NextRequest): Promise<AuthResult> => {
+    try {
+        const authHeader = request.headers.get('authorization');
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return { user: null, error: null }; // No error for optional auth
+        }
+
+        // Use the same logic as authenticateUser
+        return await authenticateUser(request);
+    } catch (error) {
+        console.error('Optional authentication error:', error);
+        return { user: null, error: null }; // Don't fail on optional auth
+    }
 };

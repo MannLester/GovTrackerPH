@@ -87,7 +87,7 @@ export class AuthService {
             .from('dim_user')
             .update({ 
               status_id: statusData.status_id,
-              updated_at: new Date().toISOString().split('T')[0]
+              updated_at: new Date().toISOString()
             })
             .eq('email', currentUser.email)
         }
@@ -193,7 +193,7 @@ export class AuthService {
           .from('dim_user')
           .update({
             status_id: statusData.status_id,
-            updated_at: new Date().toISOString().split('T')[0]
+            updated_at: new Date().toISOString()
           })
           .eq('email', firebaseUser.email)
           .select()
@@ -237,8 +237,8 @@ export class AuthService {
         role: 'citizen' as const,
         is_active: true,
         status_id: statusData.status_id,
-        created_at: new Date().toISOString().split('T')[0],
-        updated_at: new Date().toISOString().split('T')[0]
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       }
 
       console.log('📋 Creating user with data:', JSON.stringify(newUserData, null, 2))
@@ -251,6 +251,10 @@ export class AuthService {
 
       if (error) {
         console.error('❌ Error creating new user:', error)
+        console.error('❌ Error details:', JSON.stringify(error, null, 2))
+        console.error('❌ Error code:', error.code)
+        console.error('❌ Error message:', error.message)
+        console.error('❌ Error hint:', error.hint)
         throw error
       }
 

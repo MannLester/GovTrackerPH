@@ -15,13 +15,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
             success: true,
             data: {
-                user: auth.user,
-                firebase: {
-                    uid: auth.firebaseUser?.uid,
-                    email: auth.firebaseUser?.email,
-                    name: auth.firebaseUser?.name,
-                    picture: auth.firebaseUser?.picture
-                }
+                user: auth.user
             }
         });
     } catch (error) {
