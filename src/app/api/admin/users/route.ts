@@ -1,99 +1,80 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/database/config';
-import { authenticateUser, requireAdmin } from '@/lib/auth/config';
+import { supabase } from '@/lib/database/client';
 
 export async function GET(request: NextRequest) {
     try {
-        const auth = await authenticateUser(request);
+        console.log('👥 Fetching users from database...');
         
-        if (auth.error || !auth.user) {
-            return NextResponse.json(
-                { error: auth.error || 'Authentication required' },
-                { status: 401 }
-            );
-        }
-
-        if (!requireAdmin(auth.user)) {
-            return NextResponse.json(
-                { error: 'Admin access required' },
-                { status: 403 }
-            );
-        }
-
+        // Get query parameters
         const { searchParams } = new URL(request.url);
         const page = parseInt(searchParams.get('page') || '1');
         const limit = parseInt(searchParams.get('limit') || '20');
         const role = searchParams.get('role');
         const search = searchParams.get('search');
-        const offset = (page - 1) * limit;
 
-        let whereClause = 'WHERE u.user_id IS NOT NULL';
-        const queryParams: unknown[] = [];
-        let paramCount = 0;
+        // Build the query with status join
+        let query = supabase
+            .from('dim_user')
+            .select(`
+                user_id,
+                first_name,
+                last_name,
+                email,
+                username,
+                profile_picture,
+                role,
+                is_active,
+                status_id,
+                created_at,
+                updated_at,
+                dim_status!inner(
+                    status_name
+                )
+            `)
+            .order('created_at', { ascending: false });
 
+        // Add filters
         if (role) {
-            paramCount++;
-            whereClause += ` AND u.role = $${paramCount}`;
-            queryParams.push(role);
+            query = query.eq('role', role);
         }
 
         if (search) {
-            paramCount++;
-            whereClause += ` AND (u.first_name ILIKE $${paramCount} OR u.last_name ILIKE $${paramCount} OR u.email ILIKE $${paramCount})`;
-            queryParams.push(`%${search}%`);
+            query = query.or(`first_name.ilike.%${search}%,last_name.ilike.%${search}%,email.ilike.%${search}%`);
         }
 
-        paramCount++;
-        const limitParam = paramCount;
-        paramCount++;
-        const offsetParam = paramCount;
-        queryParams.push(limit, offset);
+        // Add pagination
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+        query = query.range(from, to);
 
-        const usersQuery = `
-            SELECT 
-                u.*,
-                s.status_name,
-                COUNT(DISTINCT p.project_id) as projects_created,
-                COUNT(DISTINCT c.comment_id) as comments_made,
-                COUNT(DISTINCT pl.like_id) as projects_liked
-            FROM dim_user u
-            LEFT JOIN dim_status s ON u.status_id = s.status_id
-            LEFT JOIN dim_project p ON u.user_id = p.created_by
-            LEFT JOIN dim_comment c ON u.user_id = c.user_id AND c.is_deleted = FALSE
-            LEFT JOIN fact_project_likes pl ON u.user_id = pl.user_id
-            ${whereClause}
-            GROUP BY u.user_id, s.status_name
-            ORDER BY u.created_at DESC
-            LIMIT $${limitParam} OFFSET $${offsetParam}
-        `;
+        const { data: users, error, count } = await query;
 
-        const result = await query(usersQuery, queryParams);
+        if (error) {
+            console.error('❌ Database error:', error);
+            return NextResponse.json(
+                { success: false, error: 'Failed to fetch users from database' },
+                { status: 500 }
+            );
+        }
 
-        // Get total count
-        const countQuery = `
-            SELECT COUNT(*) 
-            FROM dim_user u
-            ${whereClause}
-        `;
-        const countResult = await query(countQuery, queryParams.slice(0, -2));
-        const totalCount = parseInt(countResult.rows[0].count);
+        console.log(`✅ Successfully fetched ${users?.length || 0} users from database`);
 
         return NextResponse.json({
             success: true,
             data: {
-                users: result.rows,
+                users: users || [],
                 pagination: {
                     currentPage: page,
-                    totalPages: Math.ceil(totalCount / limit),
-                    totalCount,
+                    totalPages: Math.ceil((count || 0) / limit),
+                    totalCount: count || 0,
                     limit: limit
                 }
             }
         });
     } catch (error) {
-        console.error('Error fetching users:', error);
+        console.error('❌ Error fetching users:', error);
         return NextResponse.json(
-            { error: 'Failed to fetch users' },
+            { success: false, error: 'Internal server error' },
             { status: 500 }
         );
     }

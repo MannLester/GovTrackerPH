@@ -9,17 +9,15 @@ import { BulkOpsTab } from "@/components/admin/bulk-ops-tab"
 import { MetricsTab } from "@/components/admin/metrics-tab"
 import { SecurityTab } from "@/components/admin/security-tab"
 import { AdminMailTab } from "@/components/admin/admin-mail-tab"
-import { AdminGuard } from "@/components/admin/admin-guard"
 
 export default function AdminPage() {
   return (
-    <AdminGuard>
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        
-        <main className="container mx-auto px-4 py-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Developer Dashboard</h1>
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      
+      <main className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Developer Dashboard</h1>
           <p className="text-gray-600 mt-2">
             Manage users, projects, and system administration
           </p>
@@ -66,6 +64,5 @@ export default function AdminPage() {
         </Tabs>
       </main>
     </div>
-    </AdminGuard>
   )
 }
