@@ -13,23 +13,17 @@ import { useState } from "react"
 
 import type { ProjectWithDetails } from "@/models/dim-models/dim-project"
 
-interface Project extends Omit<ProjectWithDetails, "image" | "milestones"> {
-  images: string[]
-  milestones: Array<{
-    title: string
-    date: Date
-    completed: boolean
-  }>
-}
-
 interface ProjectDetailProps {
-  project: Project
+  project: ProjectWithDetails
 }
 
 export function ProjectDetail({ project }: ProjectDetailProps) {
   const [userVote, setUserVote] = useState<"like" | "dislike" | null>(null)
-  const [currentLikes, setCurrentLikes] = useState(project.likes)
-  const [currentDislikes, setCurrentDislikes] = useState(project.dislikes)
+  const [currentLikes, setCurrentLikes] = useState<number>(project.likes)
+  const [currentDislikes, setCurrentDislikes] = useState<number>(project.dislikes)
+
+  // Debug log for images
+  console.log('[ProjectDetail] Images for project', project.title, project.images);
 
   const handleVote = (voteType: "like" | "dislike") => {
     if (userVote === voteType) {
@@ -113,16 +107,35 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
 
       {/* Image Gallery */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {project.images.map((image, index) => (
-          <div key={index} className="relative aspect-video">
+        {project.images && project.images.length > 0 ? (
+          project.images.map((img: import("@/models/fact-models/fact-project-images").FactProjectImages, index: number) => {
+            console.log('[ProjectDetail] Rendering image', img);
+            return (
+              <div key={img.imageId || index} className="relative aspect-video">
+                <Image
+                  src={img.imageUrl || "/placeholder.svg"}
+                  alt={img.caption || `${project.title} - Image ${index + 1}`}
+                  fill
+                  className="object-cover rounded-lg"
+                />
+                {img.caption && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 rounded-b-lg">
+                    {img.caption}
+                  </div>
+                )}
+              </div>
+            );
+          })
+        ) : (
+          <div className="relative aspect-video">
             <Image
-              src={image || "/placeholder.svg"}
-              alt={`${project.title} - Image ${index + 1}`}
+              src="/placeholder.svg"
+              alt="No image available"
               fill
               className="object-cover rounded-lg"
             />
           </div>
-        ))}
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -171,7 +184,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {project.milestones.map((milestone, index) => (
+                {(project.milestones ?? []).map((milestone, index) => (
                   <div key={index} className="flex items-center space-x-3">
                     <div className={`w-4 h-4 rounded-full ${milestone.completed ? "bg-green-500" : "bg-gray-300"}`} />
                     <div className="flex-1">

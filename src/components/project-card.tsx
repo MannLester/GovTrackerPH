@@ -13,16 +13,24 @@ interface ProjectCardProps {
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
+  // Debug log for images
+  console.log('[ProjectCard] Images for project', project.title, project.images);
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
       <div className="relative">
         <Image
-          src={project.image || "/placeholder.svg"}
+          src={project.images && project.images.length > 0 ? project.images[0].imageUrl : "/placeholder.svg"}
           alt={project.title}
           width={400}
           height={200}
           className="w-full h-48 object-cover"
         />
+        {/* Show caption overlay if available */}
+        {project.images && project.images.length > 0 && project.images[0].caption && (
+          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 rounded-b-lg">
+            {project.images[0].caption}
+          </div>
+        )}
         <Badge className={`absolute top-3 right-3 ${getStatusColor(project.status)}`}>
           {getStatusText(project.status)}
         </Badge>

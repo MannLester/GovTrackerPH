@@ -55,33 +55,42 @@ export class ProjectsRepository {
                 throw error;
             }
 
-            // Transform the data to match our Project interface
-            const projects: Project[] = (data || []).map((item: ProjectWithJoins) => ({
-                project_id: item.project_id,
-                title: item.title,
-                description: item.description,
-                budget: item.amount,
-                start_date: item.start_date,
-                end_date: item.end_date,
-                status_id: item.status_id,
-                location_id: item.location_id,
-                contractor_id: item.contractor_id,
-                progress_percentage: item.progress,
-                expected_outcome: item.expected_outcome,
-                reason: item.reason,
-                created_by: item.created_by,
-                created_at: item.created_at,
-                updated_at: item.updated_at,
-                // Extract status name from joined data
-                status_name: item.dim_status?.status_name,
-                // Extract contractor name from joined data
-                contractor_name: item.dim_contractor?.company_name,
-                // Extract location data from joined data
-                region: item.dim_location?.region,
-                province: item.dim_location?.province,
-                city: item.dim_location?.city,
-                barangay: item.dim_location?.barangay
-            }));
+
+            // Fetch images for all projects in parallel
+            const { factProjectImagesRepository } = await import('./fact-project-images');
+            const projects: (Project & { images: import("@/models/fact-models/fact-project-images").FactProjectImages[] })[] = await Promise.all(
+                (data || []).map(async (item: ProjectWithJoins) => {
+                    const images = await factProjectImagesRepository.getImagesByProjectId(item.project_id);
+                    return {
+                        project_id: item.project_id,
+                        title: item.title,
+                        description: item.description,
+                        budget: item.amount,
+                        start_date: item.start_date,
+                        end_date: item.end_date,
+                        status_id: item.status_id,
+                        location_id: item.location_id,
+                        contractor_id: item.contractor_id,
+                        progress_percentage: item.progress,
+                        expected_outcome: item.expected_outcome,
+                        reason: item.reason,
+                        created_by: item.created_by,
+                        created_at: item.created_at,
+                        updated_at: item.updated_at,
+                        // Extract status name from joined data
+                        status_name: item.dim_status?.status_name,
+                        // Extract contractor name from joined data
+                        contractor_name: item.dim_contractor?.company_name,
+                        // Extract location data from joined data
+                        region: item.dim_location?.region,
+                        province: item.dim_location?.province,
+                        city: item.dim_location?.city,
+                        barangay: item.dim_location?.barangay,
+                        // Attach images
+                        images
+                    };
+                })
+            );
 
             const totalCount = count || 0;
             const totalPages = Math.ceil(totalCount / limit);
@@ -143,8 +152,12 @@ export class ProjectsRepository {
             // Fetch milestones for this project
             const milestones = await milestonesRepository.getMilestonesByProjectId(projectId);
 
+            // Fetch images for this project
+            const { factProjectImagesRepository } = await import('./fact-project-images');
+            const images = await factProjectImagesRepository.getImagesByProjectId(projectId);
+
             // Transform the data to match our Project interface
-            const project: Project = {
+            const project: Project & { images: import("@/models/fact-models/fact-project-images").FactProjectImages[] } = {
                 project_id: data.project_id,
                 title: data.title,
                 description: data.description,
@@ -176,7 +189,9 @@ export class ProjectsRepository {
                     target_date: m.target_date,
                     is_completed: m.is_completed,
                     completed_at: m.completed_at
-                }))
+                })),
+                // Attach images
+                images
             };
 
             console.log(`✅ Successfully fetched project: ${project.title} with ${milestones.length} milestones`);

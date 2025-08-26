@@ -26,7 +26,7 @@ export interface ProjectWithDetails extends Project {
   dislikes: number; // From fact tables
   comments: number; // From fact tables
   image?: string; // Primary image URL
-  images?: string[]; // Array of image URLs
+  images?: import("@/models/fact-models/fact-project-images").FactProjectImages[]; // Array of image objects
   milestones?: Array<{
     title: string;
     date: Date;
