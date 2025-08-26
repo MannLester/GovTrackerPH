@@ -1,5 +1,5 @@
 export interface Stats {
-    id: string;
+    stats_id: string;
     title: string;
     value: number;
     description: string;
