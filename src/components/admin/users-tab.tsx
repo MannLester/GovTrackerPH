@@ -75,7 +75,7 @@ export function UsersTab() {
   const filteredBannedUsers = bannedUsers.filter(user => {
     if (suspendedFilter === "all") return true;
     const statusName = getStatusName(user).toLowerCase();
-    return statusName === suspendedFilter;
+    return statusName === suspendedFilter.toLowerCase();
   })
 
   const getRoleBadgeColor = (role: string) => {
@@ -188,7 +188,15 @@ export function UsersTab() {
   const handleStatusChange = async () => {
     if (!selectedUser || !newStatus) return
     
+    setIsUpdating(true)
+    setUpdateMessage(null)
+    
     try {
+      const currentStatus = getStatusName(selectedUser).toLowerCase()
+      console.log(`🔄 Changing status for ${selectedUser.email} from ${currentStatus} to ${newStatus}`)
+      console.log(`📤 Request payload:`, { status: newStatus })
+      console.log(`📤 Request URL:`, `/api/admin/users/${selectedUser.user_id}/status`)
+      
       const response = await fetch(`/api/admin/users/${selectedUser.user_id}/status`, {
         method: 'PUT',
         headers: {
@@ -197,30 +205,71 @@ export function UsersTab() {
         body: JSON.stringify({ status: newStatus })
       })
       
+      console.log(`📥 Response status:`, response.status)
+      console.log(`📥 Response ok:`, response.ok)
+      
       const result = await response.json()
       
+      console.log(`📊 Status update response:`, result)
+      
       if (result.success) {
-        // Update local state
-        setUsers(users.map(user => 
+        // Update local state with the new status
+        const updatedUsers = users.map(user => 
           user.user_id === selectedUser.user_id 
-            ? { ...user, status_id: newStatus }
+            ? { 
+                ...user, 
+                status_id: result.data.user.status_id, // Use the UUID from the response
+                // Update the joined status name if it exists
+                dim_status: user.dim_status ? { ...user.dim_status, status_name: result.data.status_name } : { status_name: result.data.status_name }
+              }
             : user
-        ))
-        setActionType(null)
-        setSelectedUser(null)
-        setNewStatus('')
+        )
+        setUsers(updatedUsers)
+        
+        // Show success message
+        const statusAction = newStatus === 'Active' ? 'restored' : newStatus === 'Banned' ? 'banned' : 'suspended'
+        setUpdateMessage({
+          type: 'success', 
+          text: `Successfully ${statusAction} ${selectedUser.first_name} ${selectedUser.last_name}`
+        })
+        
+        console.log(`✅ Successfully updated status for ${selectedUser.email} to ${newStatus}`)
+        
+        // Close dialog after a short delay
+        setTimeout(() => {
+          setActionType(null)
+          setSelectedUser(null)
+          setNewStatus('')
+          setUpdateMessage(null)
+        }, 2000)
+        
       } else {
-        console.error('Failed to update status:', result.error)
+        setUpdateMessage({
+          type: 'error',
+          text: result.error || 'Failed to update user status'
+        })
+        console.error('❌ Failed to update status:', result.error)
       }
     } catch (error) {
-      console.error('Error updating status:', error)
+      setUpdateMessage({
+        type: 'error',
+        text: 'Network error occurred while updating status'
+      })
+      console.error('❌ Error updating status:', error)
+    } finally {
+      setIsUpdating(false)
     }
   }
 
   const handleSendMessage = async () => {
     if (!selectedUser || !messageContent) return
     
+    setIsUpdating(true)
+    setUpdateMessage(null)
+    
     try {
+      console.log(`📧 Sending message to ${selectedUser.email}`)
+      
       const response = await fetch(`/api/admin/users/${selectedUser.user_id}/message`, {
         method: 'POST',
         headers: {
@@ -232,15 +281,37 @@ export function UsersTab() {
       const result = await response.json()
       
       if (result.success) {
-        setActionType(null)
-        setSelectedUser(null)
-        setMessageContent('')
         // Show success message
+        setUpdateMessage({
+          type: 'success', 
+          text: `Message sent successfully to ${selectedUser.first_name} ${selectedUser.last_name}`
+        })
+        
+        console.log(`✅ Successfully sent message to ${selectedUser.email}`)
+        
+        // Close dialog after a short delay
+        setTimeout(() => {
+          setActionType(null)
+          setSelectedUser(null)
+          setMessageContent('')
+          setUpdateMessage(null)
+        }, 2000)
+        
       } else {
-        console.error('Failed to send message:', result.error)
+        setUpdateMessage({
+          type: 'error',
+          text: result.error || 'Failed to send message'
+        })
+        console.error('❌ Failed to send message:', result.error)
       }
     } catch (error) {
-      console.error('Error sending message:', error)
+      setUpdateMessage({
+        type: 'error',
+        text: 'Network error occurred while sending message'
+      })
+      console.error('❌ Error sending message:', error)
+    } finally {
+      setIsUpdating(false)
     }
   }
 
@@ -249,7 +320,7 @@ export function UsersTab() {
     setActionType(action)
     if (action === 'status') {
       const currentStatus = getStatusName(user).toLowerCase();
-      setNewStatus(currentStatus === 'active' ? 'banned' : 'active')
+      setNewStatus(currentStatus === 'active' ? 'Banned' : 'Active')
     }
   }
 
@@ -479,17 +550,50 @@ export function UsersTab() {
             
             {actionType === 'status' && selectedUser && (
               <div>
-                <label className="text-sm font-medium">New Status</label>
+                <label className="text-sm font-medium">Change User Status</label>
+                <div className="text-xs text-gray-500 mb-2">
+                  Current status: <span className="font-medium capitalize">{getStatusName(selectedUser)}</span>
+                </div>
                 <Select value={newStatus} onValueChange={setNewStatus}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select new status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="banned">Banned</SelectItem>
-                    <SelectItem value="suspended">Suspended</SelectItem>
+                    {getStatusName(selectedUser).toLowerCase() !== 'active' && (
+                      <SelectItem value="Active">
+                        <div className="flex flex-col">
+                          <span className="font-medium">Active</span>
+                          <span className="text-xs text-gray-500">User can access the platform normally</span>
+                        </div>
+                      </SelectItem>
+                    )}
+                    {getStatusName(selectedUser).toLowerCase() !== 'suspended' && (
+                      <SelectItem value="Suspended">
+                        <div className="flex flex-col">
+                          <span className="font-medium">Suspended</span>
+                          <span className="text-xs text-gray-500">Temporary restriction - can be restored</span>
+                        </div>
+                      </SelectItem>
+                    )}
+                    {getStatusName(selectedUser).toLowerCase() !== 'banned' && (
+                      <SelectItem value="Banned">
+                        <div className="flex flex-col">
+                          <span className="font-medium">Banned</span>
+                          <span className="text-xs text-gray-500">Permanent restriction - account blocked</span>
+                        </div>
+                      </SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
+                {newStatus && newStatus !== getStatusName(selectedUser).toLowerCase() && (
+                  <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-md">
+                    <p className="text-sm text-yellow-800">
+                      ⚠️ This will change {selectedUser.first_name} {selectedUser.last_name}&apos;s status from{' '}
+                      <span className="font-medium capitalize">{getStatusName(selectedUser)}</span> to{' '}
+                      <span className="font-medium capitalize">{newStatus}</span>
+                    </p>
+                  </div>
+                )}
               </div>
             )}
             
@@ -561,8 +665,8 @@ export function UsersTab() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="banned">Banned</SelectItem>
-                  <SelectItem value="suspended">Suspended</SelectItem>
+                  <SelectItem value="Banned">Banned</SelectItem>
+                  <SelectItem value="Suspended">Suspended</SelectItem>
                 </SelectContent>
               </Select>
               <Badge variant="outline" className="text-red-600">
