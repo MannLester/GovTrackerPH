@@ -25,6 +25,8 @@ export function UsersTab() {
   const [newRole, setNewRole] = useState<string>('')
   const [newStatus, setNewStatus] = useState<string>('')
   const [messageContent, setMessageContent] = useState('')
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [updateMessage, setUpdateMessage] = useState<{type: 'success' | 'error', text: string} | null>(null)
 
   // Fetch users from API
   useEffect(() => {
@@ -124,7 +126,12 @@ export function UsersTab() {
   const handleRoleChange = async () => {
     if (!selectedUser || !newRole) return
     
+    setIsUpdating(true)
+    setUpdateMessage(null)
+    
     try {
+      console.log(`🔄 Changing role for ${selectedUser.email} from ${selectedUser.role} to ${newRole}`)
+      
       const response = await fetch(`/api/admin/users/${selectedUser.user_id}/role`, {
         method: 'PUT',
         headers: {
@@ -136,20 +143,45 @@ export function UsersTab() {
       const result = await response.json()
       
       if (result.success) {
-        // Update local state
-        setUsers(users.map(user => 
+        // Update local state with the new role
+        const updatedUsers = users.map(user => 
           user.user_id === selectedUser.user_id 
             ? { ...user, role: newRole as "citizen" | "admin" | "personnel" | "super-admin" }
             : user
-        ))
-        setActionType(null)
-        setSelectedUser(null)
-        setNewRole('')
+        )
+        setUsers(updatedUsers)
+        
+        // Show success message
+        setUpdateMessage({
+          type: 'success', 
+          text: `Successfully updated ${selectedUser.first_name} ${selectedUser.last_name}'s role to ${newRole}`
+        })
+        
+        console.log(`✅ Successfully updated role for ${selectedUser.email} to ${newRole}`)
+        
+        // Close dialog after a short delay
+        setTimeout(() => {
+          setActionType(null)
+          setSelectedUser(null)
+          setNewRole('')
+          setUpdateMessage(null)
+        }, 2000)
+        
       } else {
-        console.error('Failed to update role:', result.error)
+        setUpdateMessage({
+          type: 'error',
+          text: result.error || 'Failed to update user role'
+        })
+        console.error('❌ Failed to update role:', result.error)
       }
     } catch (error) {
-      console.error('Error updating role:', error)
+      setUpdateMessage({
+        type: 'error',
+        text: 'Network error occurred while updating role'
+      })
+      console.error('❌ Error updating role:', error)
+    } finally {
+      setIsUpdating(false)
     }
   }
 
@@ -271,6 +303,7 @@ export function UsersTab() {
               />
             </div>
             <div className="flex items-center space-x-2">
+              <Filter className="h-4 w-4" />
               <Select value={roleFilter} onValueChange={setRoleFilter}>
                 <SelectTrigger className="w-48">
                   <SelectValue placeholder="Filter by role" />
@@ -397,7 +430,12 @@ export function UsersTab() {
       </Card>
 
       {/* Action Dialog */}
-      <Dialog open={actionType !== null} onOpenChange={() => setActionType(null)}>
+      <Dialog open={actionType !== null} onOpenChange={(open) => {
+        if (!open && !isUpdating) {
+          setActionType(null)
+          setUpdateMessage(null)
+        }
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
@@ -409,6 +447,16 @@ export function UsersTab() {
               {selectedUser && `Managing ${selectedUser.first_name} ${selectedUser.last_name} (${selectedUser.email})`}
             </DialogDescription>
           </DialogHeader>
+          
+          {/* Success/Error Message */}
+          {updateMessage && (
+            <div className={`p-3 rounded-md ${updateMessage.type === 'success' 
+              ? 'bg-green-50 border border-green-200 text-green-800' 
+              : 'bg-red-50 border border-red-200 text-red-800'
+            }`}>
+              <p className="text-sm font-medium">{updateMessage.text}</p>
+            </div>
+          )}
           
           <div className="space-y-4">
             {actionType === 'role' && selectedUser && (
@@ -461,7 +509,11 @@ export function UsersTab() {
           <div className="flex justify-end space-x-2 pt-4">
             <Button 
               variant="outline" 
-              onClick={() => setActionType(null)}
+              onClick={() => {
+                setActionType(null)
+                setUpdateMessage(null)
+              }}
+              disabled={isUpdating}
             >
               Cancel
             </Button>
@@ -472,14 +524,18 @@ export function UsersTab() {
                 else if (actionType === 'message') handleSendMessage()
               }}
               disabled={
+                isUpdating ||
                 (actionType === 'role' && !newRole) ||
                 (actionType === 'status' && !newStatus) ||
                 (actionType === 'message' && !messageContent)
               }
             >
-              {actionType === 'role' && 'Change Role'}
-              {actionType === 'status' && 'Change Status'}
-              {actionType === 'message' && 'Send Message'}
+              {isUpdating && (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              )}
+              {actionType === 'role' && (isUpdating ? 'Changing Role...' : 'Change Role')}
+              {actionType === 'status' && (isUpdating ? 'Changing Status...' : 'Change Status')}
+              {actionType === 'message' && (isUpdating ? 'Sending...' : 'Send Message')}
             </Button>
           </div>
         </DialogContent>
