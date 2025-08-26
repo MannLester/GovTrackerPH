@@ -21,9 +21,39 @@ interface CommentWithUserResponse {
     parent_comment_id: string | null;
     is_deleted: boolean;
     // User info from join
-    author_name: string;
-    author_avatar: string | null;
+    username: string;
+    profile_picture: string | null;
     like_count: number;
+    // Nested user data structure
+    dim_user?: {
+        username: string;
+        first_name: string;
+        last_name: string;
+        profile_picture: string | null;
+    } | null;
+}
+
+// Raw database response type that can handle both array and single object for dim_user
+interface SupabaseCommentResponse {
+    comment_id: string;
+    project_id: string;
+    user_id: string;
+    content: string;
+    created_at: string;
+    updated_at: string;
+    parent_comment_id: string | null;
+    is_deleted: boolean;
+    dim_user?: {
+        username: string;
+        first_name: string;
+        last_name: string;
+        profile_picture: string | null;
+    } | {
+        username: string;
+        first_name: string;
+        last_name: string;
+        profile_picture: string | null;
+    }[] | null;
 }
 
 // Raw database response type
@@ -37,6 +67,7 @@ interface RawCommentResponse {
     parent_comment_id: string | null;
     is_deleted: boolean;
     dim_user: {
+        username: string;
         first_name: string;
         last_name: string;
         profile_picture: string | null;
@@ -64,6 +95,7 @@ export class CommentsRepository {
             const to = from + limit - 1;
 
             // Build query with joins for user information
+            console.log('🔍 Building Supabase query...');
             let query = supabase
                 .from('dim_comment')
                 .select(`
@@ -75,13 +107,16 @@ export class CommentsRepository {
                     updated_at,
                     parent_comment_id,
                     is_deleted,
-                    dim_user!inner (
+                    dim_user (
+                        username,
                         first_name,
                         last_name,
                         profile_picture
                     )
                 `, { count: 'exact' })
                 .eq('is_deleted', false);
+            
+            console.log('🔍 Query built, applying filters...');
 
             // Apply filters
             if (project_id) {
@@ -101,12 +136,30 @@ export class CommentsRepository {
             const { data, error, count } = await query;
 
             if (error) {
+                console.error('❌ Supabase query error:', error);
                 throw error;
             }
 
+            console.log('🔍 Raw Supabase response data:', JSON.stringify(data, null, 2));
+            console.log('📊 Number of records returned:', data?.length || 0);
+
             // Transform the data to include user info
-            const comments: CommentWithUserResponse[] = (data || []).map((item: RawCommentResponse) => {
-                const user = item.dim_user[0]; // Get first user from join
+            const comments: CommentWithUserResponse[] = (data || []).map((item: SupabaseCommentResponse) => {
+                console.log('📋 Raw comment data from Supabase:', JSON.stringify(item, null, 2));
+                
+                // Handle both array and single object responses for dim_user
+                let user = null;
+                if (item.dim_user) {
+                    if (Array.isArray(item.dim_user)) {
+                        user = item.dim_user[0]; // Get first user from array
+                    } else {
+                        user = item.dim_user; // Single user object
+                    }
+                }
+                
+                console.log('👤 Extracted user data:', JSON.stringify(user, null, 2));
+                console.log('🔑 User ID from comment:', item.user_id);
+                
                 return {
                     comment_id: item.comment_id,
                     project_id: item.project_id,
@@ -116,9 +169,17 @@ export class CommentsRepository {
                     updated_at: item.updated_at,
                     parent_comment_id: item.parent_comment_id,
                     is_deleted: item.is_deleted,
-                    author_name: user ? `${user.first_name} ${user.last_name}` : 'Unknown User',
-                    author_avatar: user ? user.profile_picture : null,
-                    like_count: 0 // TODO: Add likes count logic
+                    // Keep flattened fields for backward compatibility
+                    username: user ? user.username || `${user.first_name} ${user.last_name}` : 'Unknown User',
+                    profile_picture: user ? user.profile_picture : null,
+                    like_count: 0, // TODO: Add likes count logic
+                    // Add nested user data structure
+                    dim_user: user ? {
+                        username: user.username,
+                        first_name: user.first_name,
+                        last_name: user.last_name,
+                        profile_picture: user.profile_picture
+                    } : null
                 };
             });
 
@@ -244,8 +305,8 @@ export class CommentsRepository {
                 updated_at: rawComment.updated_at,
                 parent_comment_id: rawComment.parent_comment_id,
                 is_deleted: rawComment.is_deleted,
-                author_name: user ? `${user.first_name} ${user.last_name}` : 'Unknown User',
-                author_avatar: user ? user.profile_picture : null,
+                username: user ? `${user.first_name} ${user.last_name}` : 'Unknown User',
+                profile_picture: user ? user.profile_picture : null,
                 like_count: 0
             };
 

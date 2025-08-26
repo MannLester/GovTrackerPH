@@ -34,9 +34,15 @@ interface ApiComment {
   content: string;
   created_at: string;
   parent_comment_id: string | null;
-  author_name: string;
-  author_avatar: string | null;
+  username: string;
+  profile_picture: string | null;
   like_count: number;
+  dim_user?: {
+    username: string;
+    first_name: string;
+    last_name: string;
+    profile_picture: string | null;
+  } | null;
 }
 
 export function CommentSection({ projectId }: CommentSectionProps) {
@@ -72,32 +78,41 @@ export function CommentSection({ projectId }: CommentSectionProps) {
           const replies = data.data.comments.filter((comment: ApiComment) => comment.parent_comment_id)
           
           // Attach replies to their parent comments
-          const commentsWithReplies = mainComments.map((comment: ApiComment) => ({
-            commentId: comment.comment_id,
-            userId: comment.user_id,
-            projectId: comment.project_id,
-            content: comment.content,
-            createdAt: comment.created_at,
-            parentCommentId: comment.parent_comment_id,
-            userName: comment.author_name || 'Unknown User',
-            userAvatar: comment.author_avatar,
-            likes: comment.like_count || 0,
-            dislikes: 0, // TODO: Add dislikes support
-            replies: replies
-              .filter((reply: ApiComment) => reply.parent_comment_id === comment.comment_id)
-              .map((reply: ApiComment) => ({
-                commentId: reply.comment_id,
-                userId: reply.user_id,
-                projectId: reply.project_id,
-                content: reply.content,
-                createdAt: reply.created_at,
-                parentCommentId: reply.parent_comment_id,
-                userName: reply.author_name || 'Unknown User',
-                userAvatar: reply.author_avatar,
-                likes: reply.like_count || 0,
-                dislikes: 0
-              }))
-          }))
+          const commentsWithReplies = mainComments.map((comment: ApiComment) => {
+            console.log('🔍 Processing comment:', comment.comment_id);
+            console.log('👤 Comment user data:', JSON.stringify(comment.dim_user, null, 2));
+            console.log('📝 Comment username:', comment.username);
+
+            const userName = comment.dim_user?.username || comment.username || 'Unknown User';
+            console.log('✅ Final userName:', userName);
+            
+            return {
+              commentId: comment.comment_id,
+              userId: comment.user_id,
+              projectId: comment.project_id,
+              content: comment.content,
+              createdAt: comment.created_at,
+              parentCommentId: comment.parent_comment_id,
+              userName: userName,
+              userAvatar: comment.dim_user?.profile_picture || comment.profile_picture,
+              likes: comment.like_count || 0,
+              dislikes: 0, // TODO: Add dislikes support
+              replies: replies
+                .filter((reply: ApiComment) => reply.parent_comment_id === comment.comment_id)
+                .map((reply: ApiComment) => ({
+                  commentId: reply.comment_id,
+                  userId: reply.user_id,
+                  projectId: reply.project_id,
+                  content: reply.content,
+                  createdAt: reply.created_at,
+                  parentCommentId: reply.parent_comment_id,
+                  userName: reply.dim_user?.username || reply.username || 'Unknown User',
+                  userAvatar: reply.dim_user?.profile_picture || reply.profile_picture,
+                  likes: reply.like_count || 0,
+                  dislikes: 0
+                }))
+            };
+          });
           
           setComments(commentsWithReplies)
         } else {

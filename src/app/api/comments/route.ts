@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
         });
 
         console.log(`✅ Successfully fetched ${result.data.length} comments`);
+        console.log('🔍 Raw comments data from repository:', JSON.stringify(result.data, null, 2));
 
         return NextResponse.json({
             success: true,
