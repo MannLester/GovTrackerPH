@@ -140,13 +140,8 @@ export class CommentsRepository {
                 throw error;
             }
 
-            console.log('🔍 Raw Supabase response data:', JSON.stringify(data, null, 2));
-            console.log('📊 Number of records returned:', data?.length || 0);
-
             // Transform the data to include user info
             const comments: CommentWithUserResponse[] = (data || []).map((item: SupabaseCommentResponse) => {
-                console.log('📋 Raw comment data from Supabase:', JSON.stringify(item, null, 2));
-                
                 // Handle both array and single object responses for dim_user
                 let user = null;
                 if (item.dim_user) {
@@ -156,9 +151,6 @@ export class CommentsRepository {
                         user = item.dim_user; // Single user object
                     }
                 }
-                
-                console.log('👤 Extracted user data:', JSON.stringify(user, null, 2));
-                console.log('🔑 User ID from comment:', item.user_id);
                 
                 return {
                     comment_id: item.comment_id,
@@ -279,7 +271,8 @@ export class CommentsRepository {
                     updated_at,
                     parent_comment_id,
                     is_deleted,
-                    dim_user!inner (
+                    dim_user (
+                        username,
                         first_name,
                         last_name,
                         profile_picture
@@ -294,8 +287,18 @@ export class CommentsRepository {
             }
 
             // Transform to expected format
-            const rawComment = commentWithUser as RawCommentResponse;
-            const user = rawComment.dim_user[0];
+            const rawComment = commentWithUser as SupabaseCommentResponse;
+            
+            // Handle both array and single object responses for dim_user
+            let user = null;
+            if (rawComment.dim_user) {
+                if (Array.isArray(rawComment.dim_user)) {
+                    user = rawComment.dim_user[0]; // Get first user from array
+                } else {
+                    user = rawComment.dim_user; // Single user object
+                }
+            }
+            
             const result: CommentWithUserResponse = {
                 comment_id: rawComment.comment_id,
                 project_id: rawComment.project_id,
@@ -305,9 +308,16 @@ export class CommentsRepository {
                 updated_at: rawComment.updated_at,
                 parent_comment_id: rawComment.parent_comment_id,
                 is_deleted: rawComment.is_deleted,
-                username: user ? `${user.first_name} ${user.last_name}` : 'Unknown User',
+                username: user ? user.username || `${user.first_name} ${user.last_name}` : 'Unknown User',
                 profile_picture: user ? user.profile_picture : null,
-                like_count: 0
+                like_count: 0,
+                // Add nested user data structure
+                dim_user: user ? {
+                    username: user.username,
+                    first_name: user.first_name,
+                    last_name: user.last_name,
+                    profile_picture: user.profile_picture
+                } : null
             };
 
             console.log(`✅ Successfully created comment: ${result.comment_id}`);

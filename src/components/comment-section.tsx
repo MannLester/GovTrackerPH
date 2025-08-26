@@ -6,6 +6,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ThumbsUp, ThumbsDown, Reply, Flag } from "lucide-react"
 import { useState, useEffect } from "react"
+import { useAuth } from "@/context/AuthContext"
+import { AuthService } from "@/lib/auth/supabase-auth"
 
 interface CommentSectionProps {
   projectId: string
@@ -52,6 +54,9 @@ export function CommentSection({ projectId }: CommentSectionProps) {
   const [newComment, setNewComment] = useState("")
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [replyContent, setReplyContent] = useState("")
+  const [submitting, setSubmitting] = useState(false)
+  
+  const { user, signInWithGoogle } = useAuth()
 
   console.log('🔍 CommentSection rendered with projectId:', projectId)
 
@@ -79,12 +84,7 @@ export function CommentSection({ projectId }: CommentSectionProps) {
           
           // Attach replies to their parent comments
           const commentsWithReplies = mainComments.map((comment: ApiComment) => {
-            console.log('🔍 Processing comment:', comment.comment_id);
-            console.log('👤 Comment user data:', JSON.stringify(comment.dim_user, null, 2));
-            console.log('📝 Comment username:', comment.username);
-
             const userName = comment.dim_user?.username || comment.username || 'Unknown User';
-            console.log('✅ Final userName:', userName);
             
             return {
               commentId: comment.comment_id,
@@ -138,53 +138,150 @@ export function CommentSection({ projectId }: CommentSectionProps) {
   const handleSubmitComment = async () => {
     if (!newComment.trim()) return
 
-    // TODO: Implement API call to create new comment
-    const comment: CommentWithUser = {
-      commentId: Date.now().toString(),
-      userId: "current-user", // TODO: Get from auth context
-      projectId: projectId,
-      content: newComment,
-      createdAt: new Date().toISOString(),
-      parentCommentId: null,
-      userName: "You",
-      userAvatar: "/diverse-user-avatars.png",
-      likes: 0,
-      dislikes: 0,
-      replies: [],
+    if (!user) {
+      // Ask user to sign in
+      try {
+        await signInWithGoogle()
+      } catch (error) {
+        console.error('Sign in error:', error)
+        setError('Please sign in to post a comment')
+        return
+      }
+      return
     }
 
-    setComments([comment, ...comments])
-    setNewComment("")
+    try {
+      setSubmitting(true)
+      setError(null)
+
+      // Get Firebase ID token for authentication
+      const token = await AuthService.getIdToken()
+      if (!token) {
+        throw new Error('Failed to get authentication token')
+      }
+
+      const response = await fetch('/api/comments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          projectId,
+          content: newComment.trim(),
+          parent_comment_id: null
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to post comment')
+      }
+
+      if (data.success) {
+        // Add the new comment to the list
+        const newCommentData: CommentWithUser = {
+          commentId: data.data.comment_id,
+          userId: data.data.user_id,
+          projectId: data.data.project_id,
+          content: data.data.content,
+          createdAt: data.data.created_at,
+          parentCommentId: data.data.parent_comment_id,
+          userName: data.data.dim_user?.username || data.data.username || user.email || 'You',
+          userAvatar: data.data.dim_user?.profile_picture || data.data.profile_picture || user.profile_picture,
+          likes: 0,
+          dislikes: 0,
+          replies: [],
+        }
+
+        setComments([newCommentData, ...comments])
+        setNewComment("")
+      }
+    } catch (error) {
+      console.error('Error posting comment:', error)
+      setError(error instanceof Error ? error.message : 'Failed to post comment')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const handleSubmitReply = async (parentId: string) => {
     if (!replyContent.trim()) return
 
-    // TODO: Implement API call to create new reply
-    const reply: CommentWithUser = {
-      commentId: `${parentId}-${Date.now()}`,
-      userId: "current-user", // TODO: Get from auth context
-      projectId: projectId,
-      content: replyContent,
-      createdAt: new Date().toISOString(),
-      parentCommentId: parentId,
-      userName: "You",
-      userAvatar: "/diverse-user-avatars.png",
-      likes: 0,
-      dislikes: 0,
-      replies: [],
+    if (!user) {
+      // Ask user to sign in
+      try {
+        await signInWithGoogle()
+      } catch (error) {
+        console.error('Sign in error:', error)
+        setError('Please sign in to post a reply')
+        return
+      }
+      return
     }
 
-    setComments(
-      comments.map((comment) =>
-        comment.commentId === parentId ? { 
-          ...comment, 
-          replies: [...(comment.replies || []), reply] 
-        } : comment,
-      ),
-    )
-    setReplyContent("")
-    setReplyingTo(null)
+    try {
+      setSubmitting(true)
+      setError(null)
+
+      // Get Firebase ID token for authentication
+      const token = await AuthService.getIdToken()
+      if (!token) {
+        throw new Error('Failed to get authentication token')
+      }
+
+      const response = await fetch('/api/comments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          projectId,
+          content: replyContent.trim(),
+          parent_comment_id: parentId
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to post reply')
+      }
+
+      if (data.success) {
+        // Add the new reply to the parent comment
+        const newReply: CommentWithUser = {
+          commentId: data.data.comment_id,
+          userId: data.data.user_id,
+          projectId: data.data.project_id,
+          content: data.data.content,
+          createdAt: data.data.created_at,
+          parentCommentId: data.data.parent_comment_id,
+          userName: data.data.dim_user?.username || data.data.username || user.email || 'You',
+          userAvatar: data.data.dim_user?.profile_picture || data.data.profile_picture || user.profile_picture,
+          likes: 0,
+          dislikes: 0,
+        }
+
+        setComments(
+          comments.map((comment) =>
+            comment.commentId === parentId ? { 
+              ...comment, 
+              replies: [...(comment.replies || []), newReply] 
+            } : comment,
+          ),
+        )
+        setReplyContent("")
+        setReplyingTo(null)
+      }
+    } catch (error) {
+      console.error('Error posting reply:', error)
+      setError(error instanceof Error ? error.message : 'Failed to post reply')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const CommentItem = ({ comment, isReply = false }: { comment: CommentWithUser; isReply?: boolean }) => (
@@ -232,10 +329,10 @@ export function CommentSection({ projectId }: CommentSectionProps) {
                 className="min-h-[80px] bg-white text-black placeholder:text-gray-500 border border-gray-300"
               />
               <div className="flex space-x-2">
-                <Button size="sm" onClick={() => handleSubmitReply(comment.commentId)}>
-                  Post Reply
+                <Button size="sm" onClick={() => handleSubmitReply(comment.commentId)} disabled={submitting}>
+                  {submitting ? "Posting..." : "Post Reply"}
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => setReplyingTo(null)}>
+                <Button size="sm" variant="outline" onClick={() => setReplyingTo(null)} disabled={submitting}>
                   Cancel
                 </Button>
               </div>
@@ -268,15 +365,21 @@ export function CommentSection({ projectId }: CommentSectionProps) {
         {/* New Comment Form */}
         <div className="space-y-3">
           <Textarea
-            placeholder="Share your thoughts about this project..."
+            placeholder={user ? "Share your thoughts about this project..." : "Please sign in to comment..."}
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             className="min-h-[100px] bg-white text-black placeholder:text-gray-500 border border-gray-300"
+            disabled={!user}
           />
           <div className="flex justify-between items-center">
-            <span className="text-xs text-gray-600">Be respectful and constructive in your feedback</span>
-            <Button onClick={handleSubmitComment} disabled={!newComment.trim()}>
-              Post Comment
+            <span className="text-xs text-gray-600">
+              {user ? "Be respectful and constructive in your feedback" : "You must be signed in to post comments"}
+            </span>
+            <Button 
+              onClick={handleSubmitComment} 
+              disabled={!newComment.trim() || submitting}
+            >
+              {submitting ? "Posting..." : user ? "Post Comment" : "Sign In to Comment"}
             </Button>
           </div>
         </div>

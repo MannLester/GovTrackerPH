@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CommentsRepository } from '@/lib/database/repositories/comments';
+import { authenticateUser } from '@/lib/auth/config';
 
 export async function GET(request: NextRequest) {
     try {
@@ -27,7 +28,6 @@ export async function GET(request: NextRequest) {
         });
 
         console.log(`✅ Successfully fetched ${result.data.length} comments`);
-        console.log('🔍 Raw comments data from repository:', JSON.stringify(result.data, null, 2));
 
         return NextResponse.json({
             success: true,
@@ -54,7 +54,6 @@ export async function GET(request: NextRequest) {
     }
 }
 
-/*
 export async function POST(request: NextRequest) {
     try {
         const auth = await authenticateUser(request);
@@ -111,4 +110,3 @@ export async function POST(request: NextRequest) {
         );
     }
 }
-*/

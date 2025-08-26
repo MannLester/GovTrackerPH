@@ -143,6 +143,22 @@ export class AuthService {
     }
   }
 
+  // Get Firebase ID token for API authentication
+  static async getIdToken(): Promise<string | null> {
+    try {
+      const currentUser = auth.currentUser
+      if (!currentUser) {
+        return null
+      }
+      
+      const token = await currentUser.getIdToken()
+      return token
+    } catch (error) {
+      console.error('Error getting ID token:', error)
+      return null
+    }
+  }
+
   // Sync Firebase user to Supabase database
   static async syncUserToSupabase(firebaseUser: FirebaseUser): Promise<AuthUser> {
     try {
