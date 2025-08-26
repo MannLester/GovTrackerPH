@@ -164,19 +164,19 @@ export class AuthService {
     try {
       console.log('📝 Syncing Firebase user to Supabase:', firebaseUser.email)
       
-      // Step 1: Get the "Online" status ID
+      // Step 1: Get the "Active" status ID
       const { data: statusData, error: statusError } = await supabase
         .from('dim_status')
         .select('status_id')
-        .eq('status_name', 'Online')
+        .eq('status_name', 'Active')
         .single()
 
       if (statusError) {
-        console.error('❌ Error fetching Online status:', statusError)
-        throw new Error('Could not find Online status in database')
+        console.error('❌ Error fetching Active status:', statusError)
+        throw new Error('Could not find Active status in database')
       }
 
-      console.log('✅ Found Online status:', statusData)
+      console.log('✅ Found Active status:', statusData)
       
       // Step 2: Check if user already exists by email (not Firebase UID)
       const { data: existingUser } = await supabase
@@ -186,9 +186,9 @@ export class AuthService {
         .single()
 
       if (existingUser) {
-        console.log('👤 User already exists, updating status to Online')
+        console.log('👤 User already exists, updating status to Active')
         
-        // Update existing user status to online
+        // Update existing user status to active
         const { data, error } = await supabase
           .from('dim_user')
           .update({
