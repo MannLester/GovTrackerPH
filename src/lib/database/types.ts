@@ -118,24 +118,24 @@ export interface Comment {
 }
 
 export interface User {
-    user_id: string;
-    username: string;
-    email: string;
-    password_hash: string;
-    first_name: string;
-    last_name: string;
-    profile_picture?: string;
-    role: 'citizen' | 'admin' | 'personnel' | 'super-admin';
-    is_active: boolean;
-    status_id: string;
-    created_at: string;
-    updated_at: string;
+    user_id: string;           // UUID
+    username: string;          // varchar
+    email: string;             // varchar
+    password_hash: string;     // varchar
+    first_name: string;        // varchar
+    last_name: string;         // varchar
+    profile_picture: string;   // text (not optional since it's in database)
+    role: 'citizen' | 'admin' | 'personnel' | 'super-admin'; // varchar
+    is_active: boolean;        // bool
+    status_id: string;         // UUID
+    created_at: string;        // date (YYYY-MM-DD format)
+    updated_at: string;        // date (YYYY-MM-DD format)
 }
 
 export interface Status {
-    status_id: number;
-    status_name: string;
-    description: string;
+    status_id: string;         // UUID (not number)
+    status_name: string;       // varchar
+    description: string;       // varchar
 }
 
 export interface Location {

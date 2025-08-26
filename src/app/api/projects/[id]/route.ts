@@ -3,10 +3,10 @@ import { projectsRepository } from '@/lib/database/config';
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = params;
+        const { id } = await params;
         console.log(`📍 Fetching project details for ID: ${id}`);
 
         // Use the repository to get the project

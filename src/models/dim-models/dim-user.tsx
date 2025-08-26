@@ -1,9 +1,14 @@
-export interface User{
-    userId: string;
-    displayName: string;
+export interface User {
+    user_id: string;
+    username: string;
     email: string;
-    profilePic: string;
-    userRole: "citizen" | "admin" | "personnel" | "super-admin";
-    createdAt: Date;
-    statusId: string;
+    password_hash: string;
+    first_name: string;
+    last_name: string;
+    profile_picture: string;
+    role: "citizen" | "admin" | "personnel" | "super-admin";
+    is_active: boolean;
+    status_id: string;
+    created_at: string;
+    updated_at: string;
 }
