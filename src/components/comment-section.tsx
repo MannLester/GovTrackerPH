@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ThumbsUp, ThumbsDown, Reply, Flag } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useAuth } from "@/context/AuthContext"
 import { AuthService } from "@/lib/auth/supabase-auth"
 
@@ -53,10 +53,28 @@ export function CommentSection({ projectId }: CommentSectionProps) {
   const [error, setError] = useState<string | null>(null)
   const [newComment, setNewComment] = useState("")
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
-  const [replyContent, setReplyContent] = useState("")
-  const [submitting, setSubmitting] = useState(false)
+  const [newReply, setNewReply] = useState("") // Simple string state like newComment
+  const [submitting, setSubmitting] = useState(false) // For main comments only
+  const [replySubmitting, setReplySubmitting] = useState(false) // Simple boolean like submitting
+  
+  const replyTextareaRef = useRef<HTMLTextAreaElement>(null)
   
   const { user, signInWithGoogle } = useAuth()
+
+  // Proper cursor position management for controlled textarea
+  const handleReplyChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const cursorPosition = e.target.selectionStart
+    const newValue = e.target.value
+    
+    setNewReply(newValue)
+    
+    // Restore cursor position after React re-render using requestAnimationFrame
+    requestAnimationFrame(() => {
+      if (replyTextareaRef.current) {
+        replyTextareaRef.current.setSelectionRange(cursorPosition, cursorPosition)
+      }
+    })
+  }
 
   console.log('🔍 CommentSection rendered with projectId:', projectId)
 
@@ -206,8 +224,8 @@ export function CommentSection({ projectId }: CommentSectionProps) {
     }
   }
 
-  const handleSubmitReply = async (parentId: string) => {
-    if (!replyContent.trim()) return
+  const handleSubmitReply = async () => {
+    if (!newReply.trim() || !replyingTo) return
 
     if (!user) {
       // Ask user to sign in
@@ -222,7 +240,7 @@ export function CommentSection({ projectId }: CommentSectionProps) {
     }
 
     try {
-      setSubmitting(true)
+      setReplySubmitting(true)
       setError(null)
 
       // Get Firebase ID token for authentication
@@ -239,8 +257,8 @@ export function CommentSection({ projectId }: CommentSectionProps) {
         },
         body: JSON.stringify({
           projectId,
-          content: replyContent.trim(),
-          parent_comment_id: parentId
+          content: newReply.trim(),
+          parent_comment_id: replyingTo
         }),
       })
 
@@ -252,7 +270,7 @@ export function CommentSection({ projectId }: CommentSectionProps) {
 
       if (data.success) {
         // Add the new reply to the parent comment
-        const newReply: CommentWithUser = {
+        const newReplyData: CommentWithUser = {
           commentId: data.data.comment_id,
           userId: data.data.user_id,
           projectId: data.data.project_id,
@@ -267,24 +285,31 @@ export function CommentSection({ projectId }: CommentSectionProps) {
 
         setComments(
           comments.map((comment) =>
-            comment.commentId === parentId ? { 
+            comment.commentId === replyingTo ? { 
               ...comment, 
-              replies: [...(comment.replies || []), newReply] 
+              replies: [...(comment.replies || []), newReplyData] 
             } : comment,
           ),
         )
-        setReplyContent("")
+        // Clear the reply and close reply form
+        setNewReply("")
         setReplyingTo(null)
       }
     } catch (error) {
       console.error('Error posting reply:', error)
       setError(error instanceof Error ? error.message : 'Failed to post reply')
     } finally {
-      setSubmitting(false)
+      setReplySubmitting(false)
     }
   }
 
-  const CommentItem = ({ comment, isReply = false }: { comment: CommentWithUser; isReply?: boolean }) => (
+const CommentItem = ({ 
+  comment, 
+  isReply = false
+}: { 
+  comment: CommentWithUser; 
+  isReply?: boolean;
+}) => (
     <div className={`space-y-3 ${isReply ? "ml-12 border-l-2 border-border pl-4" : ""}`}>
       <div className="flex space-x-3">
         <Avatar className="w-8 h-8">
@@ -323,16 +348,18 @@ export function CommentSection({ projectId }: CommentSectionProps) {
           {replyingTo === comment.commentId && (
             <div className="space-y-2 mt-3">
               <Textarea
+                ref={replyTextareaRef}
                 placeholder="Write a reply..."
-                value={replyContent}
-                onChange={(e) => setReplyContent(e.target.value)}
+                value={newReply}
+                onChange={handleReplyChange}
                 className="min-h-[80px] bg-white text-black placeholder:text-gray-500 border border-gray-300"
+                autoFocus
               />
               <div className="flex space-x-2">
-                <Button size="sm" onClick={() => handleSubmitReply(comment.commentId)} disabled={submitting}>
-                  {submitting ? "Posting..." : "Post Reply"}
+                <Button size="sm" onClick={handleSubmitReply} disabled={replySubmitting}>
+                  {replySubmitting ? "Posting..." : "Post Reply"}
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => setReplyingTo(null)} disabled={submitting}>
+                <Button size="sm" variant="outline" onClick={() => setReplyingTo(null)} disabled={replySubmitting}>
                   Cancel
                 </Button>
               </div>
@@ -344,7 +371,11 @@ export function CommentSection({ projectId }: CommentSectionProps) {
       {comment.replies && comment.replies.length > 0 && (
         <div className="space-y-3">
           {comment.replies.map((reply) => (
-            <CommentItem key={reply.commentId} comment={reply} isReply={true} />
+            <CommentItem 
+              key={reply.commentId} 
+              comment={reply} 
+              isReply={true}
+            />
           ))}
         </div>
       )}
@@ -392,7 +423,10 @@ export function CommentSection({ projectId }: CommentSectionProps) {
             <p className="text-gray-500 text-center py-8">No comments yet. Be the first to comment!</p>
           )}
           {!loading && !error && comments.map((comment) => (
-            <CommentItem key={comment.commentId} comment={comment} />
+            <CommentItem 
+              key={comment.commentId} 
+              comment={comment}
+            />
           ))}
         </div>
       </CardContent>
