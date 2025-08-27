@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { projectsRepository } from '@/lib/database/config';
 
 export async function GET(
-  request: NextRequest,
+  //request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {

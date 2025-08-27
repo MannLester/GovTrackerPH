@@ -4,11 +4,12 @@ import { ProjectDetail } from "@/components/project-detail"
 import { Header } from "@/components/header"
 import { ProjectsService } from "@/services/projectsService"
 import { ProjectWithDetails } from "@/models/dim-models/dim-project"
+import { FactProjectImages } from "@/models/fact-models/fact-project-images"
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 
 interface Project extends Omit<ProjectWithDetails, "image" | "milestones"> {
-  images: string[]
+  images: FactProjectImages[]
   milestones: Array<{
     title: string
     date: Date
@@ -35,7 +36,17 @@ export default function ProjectPage() {
         // Transform the project data to match the ProjectDetail component expectations
         const transformedProject: Project = {
           ...projectData,
-          images: projectData.images || [projectData.image || "/placeholder.svg"],
+          images: projectData.images && projectData.images.length > 0
+            ? projectData.images
+            : [
+                {
+                  imageId: "placeholder",
+                  projectId: projectData.projectId || projectData.id || "",
+                  imageUrl: projectData.image || "/placeholder.svg",
+                  caption: "",
+                  uploadedAt: new Date()
+                }
+              ],
           milestones: projectData.milestones || []
         }
         
