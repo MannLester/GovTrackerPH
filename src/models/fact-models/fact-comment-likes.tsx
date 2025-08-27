@@ -1,6 +1,6 @@
 export interface FactCommentLikes {
     userId: string;
     commentId: string;
-    isLike: boolean;
+    likeType: 'like' | 'dislike';
     createdAt: Date;
 }

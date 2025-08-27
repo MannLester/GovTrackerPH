@@ -24,6 +24,8 @@ interface CommentWithUserResponse {
     username: string;
     profile_picture: string | null;
     like_count: number;
+    likes: number;
+    dislikes: number;
     // Nested user data structure
     dim_user?: {
         username: string;
@@ -94,7 +96,7 @@ export class CommentsRepository {
             const from = (page - 1) * limit;
             const to = from + limit - 1;
 
-            // Build query with joins for user information
+            // Build query with joins for user information and like counts
             console.log('🔍 Building Supabase query...');
             let query = supabase
                 .from('dim_comment')
@@ -140,7 +142,32 @@ export class CommentsRepository {
                 throw error;
             }
 
-            // Transform the data to include user info
+            // Get like/dislike counts for all comments
+            const commentIds = (data || []).map(item => item.comment_id);
+            let likeCounts: { [key: string]: { likes: number; dislikes: number } } = {};
+            
+            if (commentIds.length > 0) {
+                const { data: likeData, error: likeError } = await supabase
+                    .from('fact_comment_likes')
+                    .select('comment_id, like_type')
+                    .in('comment_id', commentIds);
+
+                if (!likeError && likeData) {
+                    // Calculate like/dislike counts
+                    likeData.forEach(like => {
+                        if (!likeCounts[like.comment_id]) {
+                            likeCounts[like.comment_id] = { likes: 0, dislikes: 0 };
+                        }
+                        if (like.like_type === 'like') {
+                            likeCounts[like.comment_id].likes++;
+                        } else if (like.like_type === 'dislike') {
+                            likeCounts[like.comment_id].dislikes++;
+                        }
+                    });
+                }
+            }
+
+            // Transform the data to include user info and like counts
             const comments: CommentWithUserResponse[] = (data || []).map((item: SupabaseCommentResponse) => {
                 // Handle both array and single object responses for dim_user
                 let user = null;
@@ -151,6 +178,8 @@ export class CommentsRepository {
                         user = item.dim_user; // Single user object
                     }
                 }
+
+                const counts = likeCounts[item.comment_id] || { likes: 0, dislikes: 0 };
                 
                 return {
                     comment_id: item.comment_id,
@@ -164,7 +193,9 @@ export class CommentsRepository {
                     // Keep flattened fields for backward compatibility
                     username: user ? user.username || `${user.first_name} ${user.last_name}` : 'Unknown User',
                     profile_picture: user ? user.profile_picture : null,
-                    like_count: 0, // TODO: Add likes count logic
+                    like_count: counts.likes, // Total likes for backward compatibility
+                    likes: counts.likes,
+                    dislikes: counts.dislikes,
                     // Add nested user data structure
                     dim_user: user ? {
                         username: user.username,
@@ -311,6 +342,8 @@ export class CommentsRepository {
                 username: user ? user.username || `${user.first_name} ${user.last_name}` : 'Unknown User',
                 profile_picture: user ? user.profile_picture : null,
                 like_count: 0,
+                likes: 0,
+                dislikes: 0,
                 // Add nested user data structure
                 dim_user: user ? {
                     username: user.username,

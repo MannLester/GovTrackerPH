@@ -8,25 +8,34 @@ import { ThumbsUp, ThumbsDown, Reply, Flag } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { useAuth } from "@/context/AuthContext"
 import { AuthService } from "@/lib/auth/supabase-auth"
+// import { formatDistanceToNow } from "date-fns" // Not available, using simple date formatting
 
 interface CommentSectionProps {
   projectId: string
 }
 
-interface CommentWithUser {
-  commentId: string;
-  userId: string;
-  projectId: string;
-  content: string;
-  createdAt: string;
-  parentCommentId: string | null;
+interface Comment {
+  comment_id: string
+  content: string
+  created_at: string
+  username: string
+  profile_picture: string | null
+  parent_comment_id: string | null
+  project_id: string
+  user_id: string
+  updated_at: string
+  is_deleted: boolean
+  like_count: number
+  likes: number
+  dislikes: number
+  userVote?: 'like' | 'dislike' | null
+  replies?: Comment[]
+}
+
+interface CommentWithUser extends Comment {
   // User info
   userName: string;
   userAvatar: string | null;
-  // Additional fields we might get from API
-  likes?: number;
-  dislikes?: number;
-  replies?: CommentWithUser[];
 }
 
 interface ApiComment {
@@ -39,6 +48,8 @@ interface ApiComment {
   username: string;
   profile_picture: string | null;
   like_count: number;
+  likes: number;
+  dislikes: number;
   dim_user?: {
     username: string;
     first_name: string;
@@ -105,29 +116,37 @@ export function CommentSection({ projectId }: CommentSectionProps) {
             const userName = comment.dim_user?.username || comment.username || 'Unknown User';
             
             return {
-              commentId: comment.comment_id,
-              userId: comment.user_id,
-              projectId: comment.project_id,
+              comment_id: comment.comment_id,
+              user_id: comment.user_id,
+              project_id: comment.project_id,
               content: comment.content,
-              createdAt: comment.created_at,
-              parentCommentId: comment.parent_comment_id,
+              created_at: comment.created_at,
+              updated_at: comment.created_at,
+              is_deleted: false,
+              parent_comment_id: comment.parent_comment_id,
+              username: userName,
+              profile_picture: comment.dim_user?.profile_picture || comment.profile_picture,
+              like_count: comment.likes || 0,
+              likes: comment.likes || 0,
+              dislikes: comment.dislikes || 0,
               userName: userName,
               userAvatar: comment.dim_user?.profile_picture || comment.profile_picture,
-              likes: comment.like_count || 0,
-              dislikes: 0, // TODO: Add dislikes support
               replies: replies
                 .filter((reply: ApiComment) => reply.parent_comment_id === comment.comment_id)
                 .map((reply: ApiComment) => ({
-                  commentId: reply.comment_id,
-                  userId: reply.user_id,
-                  projectId: reply.project_id,
+                  comment_id: reply.comment_id,
+                  user_id: reply.user_id,
+                  project_id: reply.project_id,
                   content: reply.content,
-                  createdAt: reply.created_at,
-                  parentCommentId: reply.parent_comment_id,
-                  userName: reply.dim_user?.username || reply.username || 'Unknown User',
-                  userAvatar: reply.dim_user?.profile_picture || reply.profile_picture,
-                  likes: reply.like_count || 0,
-                  dislikes: 0
+                  created_at: reply.created_at,
+                  updated_at: reply.created_at,
+                  is_deleted: false,
+                  parent_comment_id: reply.parent_comment_id,
+                  username: reply.dim_user?.username || reply.username || 'Unknown User',
+                  profile_picture: reply.dim_user?.profile_picture || reply.profile_picture,
+                  like_count: reply.likes || 0,
+                  likes: reply.likes || 0,
+                  dislikes: reply.dislikes || 0
                 }))
             };
           });
@@ -200,16 +219,21 @@ export function CommentSection({ projectId }: CommentSectionProps) {
       if (data.success) {
         // Add the new comment to the list
         const newCommentData: CommentWithUser = {
-          commentId: data.data.comment_id,
-          userId: data.data.user_id,
-          projectId: data.data.project_id,
+          comment_id: data.data.comment_id,
+          user_id: data.data.user_id,
+          project_id: data.data.project_id,
           content: data.data.content,
-          createdAt: data.data.created_at,
-          parentCommentId: data.data.parent_comment_id,
-          userName: data.data.dim_user?.username || data.data.username || user.email || 'You',
-          userAvatar: data.data.dim_user?.profile_picture || data.data.profile_picture || user.profile_picture,
+          created_at: data.data.created_at,
+          updated_at: data.data.created_at,
+          is_deleted: false,
+          parent_comment_id: data.data.parent_comment_id,
+          username: data.data.dim_user?.username || data.data.username || user.email || 'You',
+          profile_picture: data.data.dim_user?.profile_picture || data.data.profile_picture || user.profile_picture,
+          like_count: 0,
           likes: 0,
           dislikes: 0,
+          userName: data.data.dim_user?.username || data.data.username || user.email || 'You',
+          userAvatar: data.data.dim_user?.profile_picture || data.data.profile_picture || user.profile_picture,
           replies: [],
         }
 
@@ -271,27 +295,33 @@ export function CommentSection({ projectId }: CommentSectionProps) {
       if (data.success) {
         // Add the new reply to the parent comment
         const newReplyData: CommentWithUser = {
-          commentId: data.data.comment_id,
-          userId: data.data.user_id,
-          projectId: data.data.project_id,
+          comment_id: data.data.comment_id,
+          user_id: data.data.user_id,
+          project_id: data.data.project_id,
           content: data.data.content,
-          createdAt: data.data.created_at,
-          parentCommentId: data.data.parent_comment_id,
-          userName: data.data.dim_user?.username || data.data.username || user.email || 'You',
-          userAvatar: data.data.dim_user?.profile_picture || data.data.profile_picture || user.profile_picture,
+          created_at: data.data.created_at,
+          updated_at: data.data.created_at,
+          is_deleted: false,
+          parent_comment_id: data.data.parent_comment_id,
+          username: data.data.dim_user?.username || data.data.username || user.email || 'You',
+          profile_picture: data.data.dim_user?.profile_picture || data.data.profile_picture || user.profile_picture,
+          like_count: 0,
           likes: 0,
           dislikes: 0,
+          userName: data.data.dim_user?.username || data.data.username || user.email || 'You',
+          userAvatar: data.data.dim_user?.profile_picture || data.data.profile_picture || user.profile_picture,
         }
 
-        setComments(
-          comments.map((comment) =>
-            comment.commentId === replyingTo ? { 
-              ...comment, 
-              replies: [...(comment.replies || []), newReplyData] 
-            } : comment,
-          ),
-        )
-        // Clear the reply and close reply form
+        const updatedComments = comments.map(comment => {
+          if (comment.comment_id === replyingTo) {
+            return {
+              ...comment,
+              replies: [...(comment.replies || []), newReplyData]
+            }
+          }
+          return comment
+        })
+        setComments(updatedComments)
         setNewReply("")
         setReplyingTo(null)
       }
@@ -303,82 +333,151 @@ export function CommentSection({ projectId }: CommentSectionProps) {
     }
   }
 
-const CommentItem = ({ 
-  comment, 
-  isReply = false
-}: { 
-  comment: CommentWithUser; 
-  isReply?: boolean;
-}) => (
-    <div className={`space-y-3 ${isReply ? "ml-12 border-l-2 border-border pl-4" : ""}`}>
-      <div className="flex space-x-3">
-        <Avatar className="w-8 h-8">
-          <AvatarImage src={comment.userAvatar || "/placeholder.svg"} alt={comment.userName} />
-          <AvatarFallback>{comment.userName.charAt(0)}</AvatarFallback>
-        </Avatar>
-        <div className="flex-1 space-y-2">
-          <div className="flex items-center space-x-2">
-            <span className="font-medium text-sm text-foreground">{comment.userName}</span>
-            <span className="text-xs text-gray-500">
-              {new Date(comment.createdAt).toLocaleString()}
-            </span>
-          </div>
-          <p className="text-sm text-foreground leading-relaxed">{comment.content}</p>
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
-              <ThumbsUp className="w-3 h-3 mr-1" />
-              {comment.likes || 0}
-            </Button>
-            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
-              <ThumbsDown className="w-3 h-3 mr-1" />
-              {comment.dislikes || 0}
-            </Button>
-            {!isReply && (
-              <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setReplyingTo(comment.commentId)}>
-                <Reply className="w-3 h-3 mr-1" />
-                Reply
-              </Button>
-            )}
-            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-gray-500">
-              <Flag className="w-3 h-3 mr-1" />
-              Report
-            </Button>
-          </div>
+  const handleCommentVote = async (commentId: string, voteType: "like" | "dislike") => {
+    if (!user) {
+      try {
+        await signInWithGoogle()
+        return
+      } catch (error) {
+        console.error('Sign in error:', error)
+        return
+      }
+    }
 
-          {replyingTo === comment.commentId && (
-            <div className="space-y-2 mt-3">
-              <Textarea
-                ref={replyTextareaRef}
-                placeholder="Write a reply..."
-                value={newReply}
-                onChange={handleReplyChange}
-                className="min-h-[80px] bg-white text-black placeholder:text-gray-500 border border-gray-300"
-                autoFocus
-              />
-              <div className="flex space-x-2">
-                <Button size="sm" onClick={handleSubmitReply} disabled={replySubmitting}>
-                  {replySubmitting ? "Posting..." : "Post Reply"}
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => setReplyingTo(null)} disabled={replySubmitting}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
+    try {
+      const token = await AuthService.getIdToken()
+      if (!token) {
+        throw new Error('Failed to get authentication token')
+      }
+
+      const response = await fetch(`/api/comments/${commentId}/like`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ voteType }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to vote')
+      }
+
+      if (data.success) {
+        // Update the comment in the state
+        const updateCommentVote = (comment: CommentWithUser): CommentWithUser => {
+          if (comment.comment_id === commentId) {
+            return {
+              ...comment,
+              likes: data.data.likes,
+              dislikes: data.data.dislikes,
+              userVote: data.data.userVote
+            }
+          }
+          
+          // Update replies if they exist
+          if (comment.replies) {
+            return {
+              ...comment,
+              replies: comment.replies.map(updateCommentVote as (reply: Comment) => CommentWithUser)
+            }
+          }
+          
+          return comment
+        }
+
+        setComments(comments.map(updateCommentVote as (comment: CommentWithUser) => CommentWithUser))
+      }
+    } catch (error) {
+      console.error('Error voting on comment:', error)
+      setError(error instanceof Error ? error.message : 'Failed to vote')
+    }
+  }
+
+  // Comment Item Component
+  const CommentItem = ({ comment, isReply = false }: { comment: CommentWithUser; isReply?: boolean }) => (
+    <div className={`flex space-x-3 ${isReply ? 'ml-8 pt-3 border-l-2 border-gray-100 pl-4' : ''}`}>
+      <Avatar className="w-8 h-8">
+        <AvatarImage src={comment.userAvatar || undefined} />
+        <AvatarFallback>{comment.userName?.charAt(0) || 'U'}</AvatarFallback>
+      </Avatar>
+      <div className="flex-1 space-y-2">
+        <div className="flex items-center space-x-2">
+          <span className="font-medium text-sm text-foreground">{comment.userName || 'Unknown User'}</span>
+          <div className="text-sm text-muted-foreground">
+            {new Date(comment.created_at).toLocaleDateString()}
+          </div>
+        </div>
+        <p className="text-sm text-foreground">{comment.content}</p>
+        
+        <div className="flex items-center space-x-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`flex items-center space-x-1 ${comment.userVote === 'like' ? 'text-blue-600' : 'text-gray-500'}`}
+            onClick={() => handleCommentVote(comment.comment_id, 'like')}
+          >
+            <ThumbsUp className="w-4 h-4" />
+            <span>{comment.likes}</span>
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`flex items-center space-x-1 ${comment.userVote === 'dislike' ? 'text-red-600' : 'text-gray-500'}`}
+            onClick={() => handleCommentVote(comment.comment_id, 'dislike')}
+          >
+            <ThumbsDown className="w-4 h-4" />
+            <span>{comment.dislikes}</span>
+          </Button>
+
+          {!isReply && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setReplyingTo(comment.comment_id)}
+            >
+              <Reply className="w-4 h-4 mr-1" />
+              Reply
+            </Button>
           )}
         </div>
-      </div>
 
-      {comment.replies && comment.replies.length > 0 && (
-        <div className="space-y-3">
-          {comment.replies.map((reply) => (
-            <CommentItem 
-              key={reply.commentId} 
-              comment={reply} 
-              isReply={true}
+        {replyingTo === comment.comment_id && (
+          <div className="space-y-2 mt-3">
+            <Textarea
+              ref={replyTextareaRef}
+              placeholder="Write a reply..."
+              value={newReply}
+              onChange={handleReplyChange}
+              className="min-h-[80px] bg-white text-black placeholder:text-gray-500 border border-gray-300"
+              autoFocus
             />
-          ))}
-        </div>
-      )}
+            <div className="flex space-x-2">
+              <Button size="sm" onClick={handleSubmitReply} disabled={replySubmitting}>
+                {replySubmitting ? "Posting..." : "Post Reply"}
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setReplyingTo(null)} disabled={replySubmitting}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {comment.replies && comment.replies.length > 0 && (
+          <div className="space-y-3 mt-3">
+            {comment.replies.map((reply: Comment) => (
+              <CommentItem 
+                key={reply.comment_id} 
+                comment={reply as CommentWithUser} 
+                isReply={true}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 
@@ -423,10 +522,11 @@ const CommentItem = ({
             <p className="text-gray-500 text-center py-8">No comments yet. Be the first to comment!</p>
           )}
           {!loading && !error && comments.map((comment) => (
-            <CommentItem 
-              key={comment.commentId} 
-              comment={comment}
-            />
+            <div key={comment.comment_id}>
+              <CommentItem 
+                comment={comment}
+              />
+            </div>
           ))}
         </div>
       </CardContent>

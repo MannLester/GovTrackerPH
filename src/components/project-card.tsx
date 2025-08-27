@@ -5,6 +5,9 @@ import { Progress } from "@/components/ui/progress"
 import { ThumbsUp, ThumbsDown, MessageCircle, MapPin, Flag } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { useState } from "react"
+import { useAuth } from "@/context/AuthContext"
+import { AuthService } from "@/lib/auth/supabase-auth"
 import { ProjectWithDetails } from "@/models/dim-models/dim-project"
 import { getStatusColor, getStatusText } from "@/components/status-legend"
 
@@ -13,8 +16,91 @@ interface ProjectCardProps {
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
+  const [userVote, setUserVote] = useState<"like" | "dislike" | null>(null)
+  const [currentLikes, setCurrentLikes] = useState<number>(project.likes)
+  const [currentDislikes, setCurrentDislikes] = useState<number>(project.dislikes)
+  const [isVoting, setIsVoting] = useState(false)
+  
+  const { user, signInWithGoogle } = useAuth()
+
   // Debug log for images
   console.log('[ProjectCard] Images for project', project.title, project.images);
+
+  const handleVote = async (voteType: "like" | "dislike", e: React.MouseEvent) => {
+    e.preventDefault() // Prevent navigation when clicking like/dislike
+    e.stopPropagation()
+
+    if (!user) {
+      try {
+        await signInWithGoogle()
+        return
+      } catch (error) {
+        console.error('Sign in error:', error)
+        return
+      }
+    }
+
+    if (isVoting) return
+
+    try {
+      setIsVoting(true)
+
+      const token = await AuthService.getIdToken()
+      if (!token) {
+        throw new Error('Failed to get authentication token')
+      }
+
+      const response = await fetch(`/api/projects/${project.id || project.projectId}/like`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          type: voteType
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to vote')
+      }
+
+      if (data.success) {
+        // Update UI based on the action returned by API
+        if (data.action === 'removed') {
+          if (userVote === 'like') {
+            setCurrentLikes(prev => prev - 1)
+          } else if (userVote === 'dislike') {
+            setCurrentDislikes(prev => prev - 1)
+          }
+          setUserVote(null)
+        } else if (data.action === 'updated') {
+          if (userVote === 'like' && voteType === 'dislike') {
+            setCurrentLikes(prev => prev - 1)
+            setCurrentDislikes(prev => prev + 1)
+          } else if (userVote === 'dislike' && voteType === 'like') {
+            setCurrentDislikes(prev => prev - 1)
+            setCurrentLikes(prev => prev + 1)
+          }
+          setUserVote(voteType)
+        } else if (data.action === 'added') {
+          if (voteType === 'like') {
+            setCurrentLikes(prev => prev + 1)
+          } else {
+            setCurrentDislikes(prev => prev + 1)
+          }
+          setUserVote(voteType)
+        }
+      }
+    } catch (error) {
+      console.error('Error voting:', error)
+    } finally {
+      setIsVoting(false)
+    }
+  }
+
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
       <div className="relative">
@@ -79,14 +165,30 @@ export function ProjectCard({ project }: ProjectCardProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center space-x-1 text-green-600 hover:text-green-700"
+              onClick={(e) => handleVote("like", e)}
+              disabled={isVoting}
+              className={`flex items-center space-x-1 ${
+                userVote === "like" 
+                  ? "text-green-700 bg-green-50" 
+                  : "text-green-600 hover:text-green-700 hover:bg-green-50"
+              }`}
             >
               <ThumbsUp className="w-4 h-4" />
-              <span className="text-xs">{project.likes}</span>
+              <span className="text-xs">{currentLikes}</span>
             </Button>
-            <Button variant="ghost" size="sm" className="flex items-center space-x-1 text-red-600 hover:text-red-700">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={(e) => handleVote("dislike", e)}
+              disabled={isVoting}
+              className={`flex items-center space-x-1 ${
+                userVote === "dislike" 
+                  ? "text-red-700 bg-red-50" 
+                  : "text-red-600 hover:text-red-700 hover:bg-red-50"
+              }`}
+            >
               <ThumbsDown className="w-4 h-4" />
-              <span className="text-xs">{project.dislikes}</span>
+              <span className="text-xs">{currentDislikes}</span>
             </Button>
             <Button variant="ghost" size="sm" className="flex items-center space-x-1 text-gray-600 hover:text-gray-700">
               <MessageCircle className="w-4 h-4" />

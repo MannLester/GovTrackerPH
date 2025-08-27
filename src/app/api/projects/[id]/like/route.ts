@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/database/config';
+import { supabase } from '@/lib/database/config';
 import { authenticateUser } from '@/lib/auth/config';
 
 export async function POST(
@@ -30,20 +30,27 @@ export async function POST(
     }
 
     // Check if user already has a reaction
-    const existingReaction = await query(
-      'SELECT * FROM fact_project_likes WHERE project_id = $1 AND user_id = $2',
-      [id, userId]
-    );
+    const { data: existingReaction, error: selectError } = await supabase
+      .from('fact_project_likes')
+      .select('*')
+      .eq('project_id', id)
+      .eq('user_id', userId)
+      .single();
 
-    if (existingReaction.rows.length > 0) {
-      const currentReaction = existingReaction.rows[0];
+    if (selectError && selectError.code !== 'PGRST116') {
+      throw selectError;
+    }
 
-      if (currentReaction.like_type === likeType) {
+    if (existingReaction) {
+      if (existingReaction.like_type === likeType) {
         // Same reaction → remove it
-        await query(
-          'DELETE FROM fact_project_likes WHERE project_id = $1 AND user_id = $2',
-          [id, userId]
-        );
+        const { error: deleteError } = await supabase
+          .from('fact_project_likes')
+          .delete()
+          .eq('project_id', id)
+          .eq('user_id', userId);
+
+        if (deleteError) throw deleteError;
 
         return NextResponse.json({
           success: true,
@@ -52,10 +59,16 @@ export async function POST(
         });
       } else {
         // Different reaction → update it
-        await query(
-          'UPDATE fact_project_likes SET like_type = $1, created_at = NOW() WHERE project_id = $2 AND user_id = $3',
-          [likeType, id, userId]
-        );
+        const { error: updateError } = await supabase
+          .from('fact_project_likes')
+          .update({ 
+            like_type: likeType,
+            created_at: new Date().toISOString()
+          })
+          .eq('project_id', id)
+          .eq('user_id', userId);
+
+        if (updateError) throw updateError;
 
         return NextResponse.json({
           success: true,
@@ -66,10 +79,15 @@ export async function POST(
     }
 
     // No previous reaction → insert
-    await query(
-      'INSERT INTO fact_project_likes (project_id, user_id, like_type) VALUES ($1, $2, $3)',
-      [id, userId, likeType]
-    );
+    const { error: insertError } = await supabase
+      .from('fact_project_likes')
+      .insert({
+        project_id: id,
+        user_id: userId,
+        like_type: likeType
+      });
+
+    if (insertError) throw insertError;
 
     return NextResponse.json({
       success: true,

@@ -10,6 +10,8 @@ import Image from "next/image"
 import { CommentSection } from "@/components/comment-section"
 import { getStatusColor, getStatusText } from "@/components/status-legend"
 import { useState } from "react"
+import { useAuth } from "@/context/AuthContext"
+import { AuthService } from "@/lib/auth/supabase-auth"
 
 import type { ProjectWithDetails } from "@/models/dim-models/dim-project"
 
@@ -21,35 +23,85 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
   const [userVote, setUserVote] = useState<"like" | "dislike" | null>(null)
   const [currentLikes, setCurrentLikes] = useState<number>(project.likes)
   const [currentDislikes, setCurrentDislikes] = useState<number>(project.dislikes)
+  const [isVoting, setIsVoting] = useState(false)
+  
+  const { user, signInWithGoogle } = useAuth()
 
   // Debug log for images
   console.log('[ProjectDetail] Images for project', project.title, project.images);
 
-  const handleVote = (voteType: "like" | "dislike") => {
-    if (userVote === voteType) {
-      // Remove vote
-      if (voteType === "like") {
-        setCurrentLikes((prev) => prev - 1)
-      } else {
-        setCurrentDislikes((prev) => prev - 1)
+  const handleVote = async (voteType: "like" | "dislike") => {
+    if (!user) {
+      try {
+        await signInWithGoogle()
+        return
+      } catch (error) {
+        console.error('Sign in error:', error)
+        return
       }
-      setUserVote(null)
-    } else {
-      // Change or add vote
-      if (userVote === "like") {
-        setCurrentLikes((prev) => prev - 1)
-        setCurrentDislikes((prev) => prev + 1)
-      } else if (userVote === "dislike") {
-        setCurrentDislikes((prev) => prev - 1)
-        setCurrentLikes((prev) => prev + 1)
-      } else {
-        if (voteType === "like") {
-          setCurrentLikes((prev) => prev + 1)
-        } else {
-          setCurrentDislikes((prev) => prev + 1)
+    }
+
+    if (isVoting) return
+
+    try {
+      setIsVoting(true)
+
+      const token = await AuthService.getIdToken()
+      if (!token) {
+        throw new Error('Failed to get authentication token')
+      }
+
+      const response = await fetch(`/api/projects/${project.id || project.projectId}/like`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          type: voteType
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to vote')
+      }
+
+      if (data.success) {
+        // Update UI based on the action returned by API
+        if (data.action === 'removed') {
+          // Vote was removed
+          if (userVote === 'like') {
+            setCurrentLikes(prev => prev - 1)
+          } else if (userVote === 'dislike') {
+            setCurrentDislikes(prev => prev - 1)
+          }
+          setUserVote(null)
+        } else if (data.action === 'updated') {
+          // Vote was changed
+          if (userVote === 'like' && voteType === 'dislike') {
+            setCurrentLikes(prev => prev - 1)
+            setCurrentDislikes(prev => prev + 1)
+          } else if (userVote === 'dislike' && voteType === 'like') {
+            setCurrentDislikes(prev => prev - 1)
+            setCurrentLikes(prev => prev + 1)
+          }
+          setUserVote(voteType)
+        } else if (data.action === 'added') {
+          // New vote was added
+          if (voteType === 'like') {
+            setCurrentLikes(prev => prev + 1)
+          } else {
+            setCurrentDislikes(prev => prev + 1)
+          }
+          setUserVote(voteType)
         }
       }
-      setUserVote(voteType)
+    } catch (error) {
+      console.error('Error voting:', error)
+    } finally {
+      setIsVoting(false)
     }
   }
 
@@ -66,6 +118,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
               variant={userVote === "like" ? "default" : "outline"}
               size="sm"
               onClick={() => handleVote("like")}
+              disabled={isVoting}
               className={
                 userVote === "like" ? "bg-green-600 hover:bg-green-700" : "hover:bg-green-50 hover:text-green-600"
               }
@@ -77,6 +130,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
               variant={userVote === "dislike" ? "default" : "outline"}
               size="sm"
               onClick={() => handleVote("dislike")}
+              disabled={isVoting}
               className={userVote === "dislike" ? "bg-red-600 hover:bg-red-700" : "hover:bg-red-50 hover:text-red-600"}
             >
               <ThumbsDown className="w-4 h-4 mr-1" />
