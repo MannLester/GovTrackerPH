@@ -3,10 +3,10 @@ import { supabase } from '@/lib/database/client'
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { user_id: string } }
+  { params }: { params: Promise<{ user_id: string }> }
 ) {
   try {
-    const { user_id } = params
+    const { user_id } = await params
     const { role } = await request.json()
 
     if (!user_id || !role) {

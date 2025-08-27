@@ -4,7 +4,7 @@ import { authenticateUser } from '@/lib/auth/config';
 
 
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const auth = await authenticateUser(request);
         
@@ -15,7 +15,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
             );
         }
 
-        const { id } = params;
+        const { id } = await params;
         const body = await request.json();
         const { content } = body;
 
@@ -66,7 +66,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const auth = await authenticateUser(request);
         
@@ -77,7 +77,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
             );
         }
 
-    const { id } = params;
+    const { id } = await params;
 
         // Check if user owns the comment or is admin
         const comment = await query(

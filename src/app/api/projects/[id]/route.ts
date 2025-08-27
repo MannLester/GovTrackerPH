@@ -1,11 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { projectsRepository } from '@/lib/database/config';
 
 export async function GET(
-  context: { params: { id: string } }
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = context.params;
+    const { id } = await context.params;
     console.log(`📍 Fetching project details for ID: ${id}`);
 
     // Use the repository to get the project

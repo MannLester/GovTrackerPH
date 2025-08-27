@@ -78,13 +78,15 @@ export function ProjectGrid() {
   }
 
   return (
+    
     <div>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-foreground font-[family-name:var(--font-space-grotesk)]">
           Government Projects
         </h2>
         <div className="text-sm text-muted-foreground">
-          Showing {projects.length} of {(total || 0).toLocaleString()} projects
+          {/* Change the total to the database next */}
+          Showing {projects.length} of 4 projects  
         </div>
       </div>
 

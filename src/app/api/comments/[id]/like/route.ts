@@ -4,7 +4,7 @@ import { authenticateUser } from '@/lib/auth/config';
 
 
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const auth = await authenticateUser(request);
         
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
             );
         }
 
-        const { id } = params;
+        const { id } = await params;
         const userId = auth.user.user_id;
 
         // Check if already liked
