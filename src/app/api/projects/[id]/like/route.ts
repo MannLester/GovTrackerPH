@@ -15,9 +15,9 @@ export async function POST(
       return NextResponse.json(
         { error: auth.error || 'Authentication required' },
         { status: 401 }
-      );
+      ); 
     }
-
+    //Here
     const userId = auth.user.user_id;
     const body = await request.json();
     const likeType: 'like' | 'dislike' = body.type || 'like';

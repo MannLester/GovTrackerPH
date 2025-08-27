@@ -2,11 +2,10 @@ import { NextResponse } from 'next/server';
 import { projectsRepository } from '@/lib/database/config';
 
 export async function GET(
-  //request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    const { id } = params; // ✅ no need for await
+    const { id } = context.params;
     console.log(`📍 Fetching project details for ID: ${id}`);
 
     // Use the repository to get the project
