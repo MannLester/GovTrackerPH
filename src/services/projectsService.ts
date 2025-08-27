@@ -1,4 +1,17 @@
+// Type for possible snake_case image object from backend
+type SnakeCaseImage = {
+  image_id?: string;
+  project_id?: string;
+  image_url?: string;
+  caption?: string;
+  uploaded_at?: string;
+  imageId?: string;
+  projectId?: string;
+  imageUrl?: string;
+  uploadedAt?: string | Date;
+};
 import { ProjectWithDetails } from '@/models/dim-models/dim-project';
+import { FactProjectImages } from '@/models/fact-models/fact-project-images';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
@@ -104,39 +117,74 @@ export class ProjectsService {
     const response = await this.request<ApiProjectsResponse>(url);
     
     // Transform the response to match our frontend interface
-    const transformedProjects: ProjectWithDetails[] = response.projects.map((project: ApiProjectResponse) => ({
-      id: project.project_id,
-      projectId: project.project_id,
-      title: project.title,
-      description: project.description,
-      amount: project.budget || 0,
-      amountFormatted: `₱${(project.budget || 0).toLocaleString()}`,
-      statusId: project.status_id,
-      contractorId: project.contractor_id,
-      locationId: project.location_id,
-      status: project.status_name || project.status_id,
-      contractor: project.contractor_name || project.contractor_id,
-      location: project.location_name || `${project.city}, ${project.region}` || project.location_id,
-      progress: (project.progress_percentage || 0).toString(),
-      progressNumber: project.progress_percentage || 0,
-      expectedOutcome: project.expected_outcome || project.expectedOurcome || "",
-      expectedOurcome: project.expected_outcome || "",
-      personnel: project.personnel || "",
-      reason: project.reason || "",
-      startDate: safeDate(project.start_date),
-      expectedCompletionDate: safeDate(project.end_date),
-      createdAt: safeDate(project.created_at),
-      likes: project.likes || 0,
-      dislikes: project.dislikes || 0,
-      comments: project.comments || 0,
-      image: project.primary_image,
-      images: project.images || [],
-      milestones: project.milestones?.map(m => ({
-        title: m.title,
-        date: safeDate(m.target_date),
-        completed: m.is_completed
-      })) || [],
-    }));
+    const transformedProjects: ProjectWithDetails[] = response.projects.map((project: ApiProjectResponse) => {
+      // Transform images: handle string, array of strings, or array of objects
+      let images: FactProjectImages[] = [];
+      if (typeof project.images === 'string' && project.images) {
+        images = (project.images as string)
+          ? (project.images as string).split(',').map((url: string, idx: number): FactProjectImages => ({
+              imageId: `${project.project_id}_${idx}`,
+              projectId: project.project_id,
+              imageUrl: url.trim(),
+              caption: '',
+              uploadedAt: new Date()
+            }))
+          : [];
+      } else if (Array.isArray(project.images)) {
+        images = project.images.map((img: string | SnakeCaseImage, idx: number): FactProjectImages => {
+          if (typeof img === 'string') {
+            return {
+              imageId: `${project.project_id}_${idx}`,
+              projectId: project.project_id,
+              imageUrl: img,
+              caption: '',
+              uploadedAt: new Date()
+            };
+          } else {
+            return {
+              imageId: img.image_id || img.imageId || `${project.project_id}_${idx}`,
+              projectId: img.project_id || img.projectId || project.project_id,
+              imageUrl: img.image_url || img.imageUrl || '',
+              caption: img.caption || '',
+              uploadedAt: img.uploaded_at ? new Date(img.uploaded_at) : (img.uploadedAt ? new Date(img.uploadedAt) : new Date())
+            };
+          }
+        });
+      }
+      return {
+        id: project.project_id,
+        projectId: project.project_id,
+        title: project.title,
+        description: project.description,
+        amount: project.budget || 0,
+        amountFormatted: `₱${(project.budget || 0).toLocaleString()}`,
+        statusId: project.status_id,
+        contractorId: project.contractor_id,
+        locationId: project.location_id,
+        status: project.status_name || project.status_id,
+        contractor: project.contractor_name || project.contractor_id,
+        location: project.location_name || `${project.city}, ${project.region}` || project.location_id,
+        progress: (project.progress_percentage || 0).toString(),
+        progressNumber: project.progress_percentage || 0,
+        expectedOutcome: project.expected_outcome || project.expectedOurcome || "",
+        expectedOurcome: project.expected_outcome || "",
+        personnel: project.personnel || "",
+        reason: project.reason || "",
+        startDate: safeDate(project.start_date),
+        expectedCompletionDate: safeDate(project.end_date),
+        createdAt: safeDate(project.created_at),
+        likes: project.likes || 0,
+        dislikes: project.dislikes || 0,
+        comments: project.comments || 0,
+        image: project.primary_image,
+        images,
+        milestones: project.milestones?.map(m => ({
+          title: m.title,
+          date: safeDate(m.target_date),
+          completed: m.is_completed
+        })) || [],
+      };
+    });
 
     return {
       projects: transformedProjects,
@@ -151,6 +199,39 @@ export class ProjectsService {
     
     // Transform single project response
     const project = response.project;
+    // Transform images: handle string, array of strings, or array of objects
+    let images: FactProjectImages[] = [];
+    if (typeof project.images === 'string' && project.images) {
+      images = (project.images as string)
+        ? (project.images as string).split(',').map((url: string, idx: number): FactProjectImages => ({
+            imageId: `${project.project_id}_${idx}`,
+            projectId: project.project_id,
+            imageUrl: url.trim(),
+            caption: '',
+            uploadedAt: new Date()
+          }))
+        : [];
+    } else if (Array.isArray(project.images)) {
+      images = project.images.map((img: string | SnakeCaseImage, idx: number): FactProjectImages => {
+        if (typeof img === 'string') {
+          return {
+            imageId: `${project.project_id}_${idx}`,
+            projectId: project.project_id,
+            imageUrl: img,
+            caption: '',
+            uploadedAt: new Date()
+          };
+        } else {
+          return {
+            imageId: img.image_id || img.imageId || `${project.project_id}_${idx}`,
+            projectId: img.project_id || img.projectId || project.project_id,
+            imageUrl: img.image_url || img.imageUrl || '',
+            caption: img.caption || '',
+            uploadedAt: img.uploaded_at ? new Date(img.uploaded_at) : (img.uploadedAt ? new Date(img.uploadedAt) : new Date())
+          };
+        }
+      });
+    }
     return {
       id: project.project_id,
       projectId: project.project_id,
@@ -177,7 +258,7 @@ export class ProjectsService {
       dislikes: project.dislikes || 0,
       comments: project.comments || 0,
       image: project.primary_image,
-      images: project.images || [],
+      images,
       milestones: project.milestones?.map(m => ({
         title: m.title,
         date: safeDate(m.target_date),
