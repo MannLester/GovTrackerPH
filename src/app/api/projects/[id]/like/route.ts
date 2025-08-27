@@ -4,10 +4,11 @@ import { authenticateUser } from '@/lib/auth/config';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
+  const { id } = context.params;
   try {
-    const { id } = params;
+
     const auth = await authenticateUser(request);
 
     if (auth.error || !auth.user) {
