@@ -3,10 +3,10 @@ import { supabase } from '@/lib/database/client'
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ user_id: string }> }
+  { params }: { params: { user_id: string } }
 ) {
   try {
-    const { user_id } = await params
+    const { user_id } = params
     const { status } = await request.json()
 
     console.log(`🔄 Status update request for user ${user_id} with status: ${status}`)

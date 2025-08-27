@@ -2,13 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database/config';
 import { optionalAuth } from '@/lib/auth/config';
 
-interface RouteParams {
-    params: Promise<{ id: string }>;
-}
 
-export async function GET(request: NextRequest, { params }: RouteParams) {
+
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
     try {
-        const { id } = await params;
+        const { id } = params;
         const auth = await optionalAuth(request);
 
         const repliesQuery = `

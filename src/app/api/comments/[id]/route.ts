@@ -2,11 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database/config';
 import { authenticateUser } from '@/lib/auth/config';
 
-interface RouteParams {
-    params: Promise<{ id: string }>;
-}
 
-export async function PUT(request: NextRequest, { params }: RouteParams) {
+
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
     try {
         const auth = await authenticateUser(request);
         
@@ -17,7 +15,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
             );
         }
 
-        const { id } = await params;
+        const { id } = params;
         const body = await request.json();
         const { content } = body;
 
@@ -68,7 +66,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 }
 
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
     try {
         const auth = await authenticateUser(request);
         
@@ -79,7 +77,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
             );
         }
 
-        const { id } = await params;
+    const { id } = params;
 
         // Check if user owns the comment or is admin
         const comment = await query(

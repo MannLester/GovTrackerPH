@@ -2,11 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/database/config';
 import { authenticateUser } from '@/lib/auth/config';
 
-interface RouteParams {
-    params: Promise<{ id: string }>;
-}
 
-export async function POST(request: NextRequest, { params }: RouteParams) {
+
+export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
     try {
         const auth = await authenticateUser(request);
         
@@ -17,7 +15,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
             );
         }
 
-        const { id } = await params;
+        const { id } = params;
         const userId = auth.user.user_id;
 
         // Check if already liked
