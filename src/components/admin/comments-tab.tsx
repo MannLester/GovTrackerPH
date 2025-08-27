@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Search, MessageSquare, Trash2, CheckCircle } from "lucide-react"
+import { Search, Trash2, CheckCircle } from "lucide-react"
 
 // Mock comments data
 const mockComments = [

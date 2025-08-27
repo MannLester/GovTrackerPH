@@ -41,7 +41,7 @@ const mockEmails = [
 ]
 
 export function AdminMailTab() {
-  const [selectedEmail, setSelectedEmail] = useState<any>(null)
+  //const [selectedEmail, setSelectedEmail] = useState<any>(null)
   const [composeMode, setComposeMode] = useState(false)
 
   const getStatusColor = (status: string) => {
