@@ -2,6 +2,66 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/database/config';
 import { authenticateUser } from '@/lib/auth/config';
 
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params;
+  try {
+    const auth = await authenticateUser(request);
+
+    if (auth.error || !auth.user) {
+      return NextResponse.json(
+        { error: auth.error || 'Authentication required' },
+        { status: 401 }
+      ); 
+    }
+
+    const userId = auth.user.user_id;
+
+    // Get current user's vote
+    const { data: userVote, error: voteError } = await supabase
+      .from('fact_project_likes')
+      .select('like_type')
+      .eq('project_id', id)
+      .eq('user_id', userId)
+      .single();
+
+    if (voteError && voteError.code !== 'PGRST116') {
+      throw voteError;
+    }
+
+    // Get total like/dislike counts
+    const { data: allVotes, error: countError } = await supabase
+      .from('fact_project_likes')
+      .select('like_type')
+      .eq('project_id', id);
+
+    if (countError) {
+      throw countError;
+    }
+
+    const likes = allVotes?.filter(v => v.like_type === 'like').length || 0;
+    const dislikes = allVotes?.filter(v => v.like_type === 'dislike').length || 0;
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        likes,
+        dislikes,
+        userVote: userVote?.like_type || null
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching vote status:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch vote status' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -20,7 +80,7 @@ export async function POST(
     //Here
     const userId = auth.user.user_id;
     const body = await request.json();
-    const likeType: 'like' | 'dislike' = body.type || 'like';
+    const likeType: 'like' | 'dislike' = body.voteType || 'like';
 
     if (!['like', 'dislike'].includes(likeType)) {
       return NextResponse.json(
@@ -41,6 +101,9 @@ export async function POST(
       throw selectError;
     }
 
+    let action: string;
+    let userVote: 'like' | 'dislike' | null = null;
+
     if (existingReaction) {
       if (existingReaction.like_type === likeType) {
         // Same reaction → remove it
@@ -52,11 +115,8 @@ export async function POST(
 
         if (deleteError) throw deleteError;
 
-        return NextResponse.json({
-          success: true,
-          action: 'removed',
-          message: `${likeType} removed`,
-        });
+        action = 'removed';
+        userVote = null;
       } else {
         // Different reaction → update it
         const { error: updateError } = await supabase
@@ -70,29 +130,45 @@ export async function POST(
 
         if (updateError) throw updateError;
 
-        return NextResponse.json({
-          success: true,
-          action: 'updated',
-          message: `Changed to ${likeType}`,
-        });
+        action = 'updated';
+        userVote = likeType;
       }
+    } else {
+      // No previous reaction → insert
+      const { error: insertError } = await supabase
+        .from('fact_project_likes')
+        .insert({
+          project_id: id,
+          user_id: userId,
+          like_type: likeType
+        });
+
+      if (insertError) throw insertError;
+
+      action = 'added';
+      userVote = likeType;
     }
 
-    // No previous reaction → insert
-    const { error: insertError } = await supabase
+    // Get updated like/dislike counts
+    const { data: allVotes, error: countError } = await supabase
       .from('fact_project_likes')
-      .insert({
-        project_id: id,
-        user_id: userId,
-        like_type: likeType
-      });
+      .select('like_type')
+      .eq('project_id', id);
 
-    if (insertError) throw insertError;
+    if (countError) throw countError;
+
+    const likes = allVotes?.filter(v => v.like_type === 'like').length || 0;
+    const dislikes = allVotes?.filter(v => v.like_type === 'dislike').length || 0;
 
     return NextResponse.json({
       success: true,
-      action: 'added',
-      message: `Project ${likeType}d`,
+      action,
+      data: {
+        likes,
+        dislikes,
+        userVote
+      },
+      message: `Project ${action}`,
     });
   } catch (error) {
     console.error('❌ Error handling project reaction:', error);

@@ -9,7 +9,7 @@ import { ThumbsUp, ThumbsDown, MapPin, Calendar, User, Building, Target, Clock, 
 import Image from "next/image"
 import { CommentSection } from "@/components/comment-section"
 import { getStatusColor, getStatusText } from "@/components/status-legend"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "@/context/AuthContext"
 import { AuthService } from "@/lib/auth/supabase-auth"
 
@@ -29,6 +29,39 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
 
   // Debug log for images
   console.log('[ProjectDetail] Images for project', project.title, project.images);
+
+  // Fetch current user vote and latest counts on component mount
+  useEffect(() => {
+    const fetchCurrentVoteStatus = async () => {
+      if (!user) return;
+
+      try {
+        const token = await AuthService.getIdToken()
+        if (!token) return;
+
+        // Fetch current user's vote status and latest counts
+        const response = await fetch(`/api/projects/${project.projectId}/like`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success) {
+            setCurrentLikes(data.data.likes)
+            setCurrentDislikes(data.data.dislikes)
+            setUserVote(data.data.userVote)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching vote status:', error)
+      }
+    }
+
+    fetchCurrentVoteStatus()
+  }, [user, project.projectId])
 
   const handleVote = async (voteType: "like" | "dislike") => {
     if (!user) {
@@ -58,7 +91,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-          type: voteType
+          voteType: voteType
         }),
       })
 
@@ -68,35 +101,11 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
         throw new Error(data.error || 'Failed to vote')
       }
 
-      if (data.success) {
-        // Update UI based on the action returned by API
-        if (data.action === 'removed') {
-          // Vote was removed
-          if (userVote === 'like') {
-            setCurrentLikes(prev => prev - 1)
-          } else if (userVote === 'dislike') {
-            setCurrentDislikes(prev => prev - 1)
-          }
-          setUserVote(null)
-        } else if (data.action === 'updated') {
-          // Vote was changed
-          if (userVote === 'like' && voteType === 'dislike') {
-            setCurrentLikes(prev => prev - 1)
-            setCurrentDislikes(prev => prev + 1)
-          } else if (userVote === 'dislike' && voteType === 'like') {
-            setCurrentDislikes(prev => prev - 1)
-            setCurrentLikes(prev => prev + 1)
-          }
-          setUserVote(voteType)
-        } else if (data.action === 'added') {
-          // New vote was added
-          if (voteType === 'like') {
-            setCurrentLikes(prev => prev + 1)
-          } else {
-            setCurrentDislikes(prev => prev + 1)
-          }
-          setUserVote(voteType)
-        }
+      if (data.success && data.data) {
+        // Use actual database counts from API response
+        setCurrentLikes(data.data.likes)
+        setCurrentDislikes(data.data.dislikes)
+        setUserVote(data.data.userVote)
       }
     } catch (error) {
       console.error('Error voting:', error)
