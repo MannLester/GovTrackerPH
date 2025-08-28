@@ -52,9 +52,6 @@ export function Header() {
                 <span className="font-bold text-lg sm:text-xl text-foreground">GovTracker PH</span>
                 <p className="text-xs text-muted-foreground -mt-1">Transparency para sa Bayan</p>
               </div>
-              <div className="block sm:hidden">
-                <span className="font-bold text-base text-foreground">GovTracker</span>
-              </div>
             </Link>
           </div>
 
