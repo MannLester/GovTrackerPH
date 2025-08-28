@@ -5,9 +5,15 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,  // 👈 disables ESLint at build time
   },
   images: {
-    domains: [
-      'supabase.com',
-      'dxbxqqfspwhkapmgrylz.supabase.co',
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'supabase.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'dxbxqqfspwhkapmgrylz.supabase.co',
+      },
     ],
   },
   /* config options here */
