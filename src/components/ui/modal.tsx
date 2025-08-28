@@ -42,21 +42,21 @@ export function Modal({ isOpen, onClose, children, showCloseButton = true }: Mod
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm p-4">
       {/* Transparent backdrop for click handling */}
       <div 
         className="absolute inset-0"
         onClick={onClose}
       />
       
-      {/* Modal Content */}
-      <div className="relative bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 p-6 border z-10">
+      {/* Modal Content - responsive sizing */}
+      <div className="relative bg-white rounded-lg shadow-2xl w-full max-w-sm sm:max-w-md p-4 sm:p-6 border z-10">
         {showCloseButton && (
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            className="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-gray-600 transition-colors"
           >
-            <X size={20} />
+            <X size={18} className="sm:w-5 sm:h-5" />
           </button>
         )}
         {children}

@@ -9,12 +9,12 @@ export default function HomePage() {
     <>
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="container mx-auto px-4 py-8">
-          <div className="mb-8">
-            <div className="text-center mb-6">
-              <h1 className="text-4xl font-bold text-foreground mb-2">Philippine Government Project Tracker</h1>
-              <p className="text-lg text-accent font-medium mb-4">&quot;Ang Pagbabago ay Nagsisimula sa Proyektong Nagagamit ng Tama&quot;</p>
-              <p className="text-base text-muted-foreground max-w-3xl mx-auto">
+        <main className="container mx-auto px-4 py-6 sm:py-8">
+          <div className="mb-6 sm:mb-8">
+            <div className="text-center mb-4 sm:mb-6">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2">Philippine Government Project Tracker</h1>
+              <p className="text-sm sm:text-base lg:text-lg text-accent font-medium mb-3 sm:mb-4">&quot;Ang Pagbabago ay Nagsisimula sa Proyektong Nagagamit ng Tama&quot;</p>
+              <p className="text-sm sm:text-base text-muted-foreground max-w-3xl mx-auto px-2">
                 Track government projects across the Philippines. See what&apos;s being built in your barangay, city, or
                 province. Vote on projects, share your thoughts, and engage with fellow Filipinos about public
                 infrastructure and services that matter to our communities.

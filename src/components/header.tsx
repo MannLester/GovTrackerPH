@@ -38,30 +38,43 @@ export function Header() {
   return (
     <header className="border-b border-border bg-card">
       <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Link href="/" className="flex items-center space-x-3">
+        <div className="flex items-center justify-between gap-4">
+          {/* Logo - responsive sizing */}
+          <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
+            <Link href="/" className="flex items-center space-x-2 sm:space-x-3">
               <div className="relative">
-                <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow-sm">
-                  <span className="text-primary-foreground font-bold text-lg">₱</span>
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary rounded-lg flex items-center justify-center shadow-sm">
+                  <span className="text-primary-foreground font-bold text-sm sm:text-lg">₱</span>
                 </div>
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-accent rounded-full border-2 border-background"></div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-accent rounded-full border-2 border-background"></div>
               </div>
-              <div>
-                <span className="font-bold text-xl text-foreground">GovTracker PH</span>
+              <div className="hidden sm:block">
+                <span className="font-bold text-lg sm:text-xl text-foreground">GovTracker PH</span>
                 <p className="text-xs text-muted-foreground -mt-1">Transparency para sa Bayan</p>
+              </div>
+              <div className="block sm:hidden">
+                <span className="font-bold text-base text-foreground">GovTracker</span>
               </div>
             </Link>
           </div>
 
-          <div className="flex-1 max-w-md mx-8">
-            <div className="relative">
+          {/* Search - hidden on mobile, shown on tablet+ */}
+          <div className="hidden md:flex flex-1 max-w-md mx-4">
+            <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input placeholder="Search projects, barangay, city, province..." className="pl-10 border-primary" />
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          {/* Actions - responsive layout */}
+          <div className="flex items-center space-x-1 sm:space-x-2">
+            {/* Search button for mobile */}
+            <div className="block md:hidden">
+              <Button variant="ghost" size="icon">
+                <Search className="w-5 h-5" />
+              </Button>
+            </div>
+
             {/* Notifications - only show for authenticated users */}
             {user && (
               <Button variant="ghost" size="icon">
@@ -76,8 +89,8 @@ export function Header() {
               /* Authenticated User */
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                    <Avatar className="h-10 w-10">
+                  <Button variant="ghost" className="relative h-8 w-8 sm:h-10 sm:w-10 rounded-full">
+                    <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
                       <AvatarImage src={user.profile_picture} alt={user.username} />
                       <AvatarFallback>
                         {user.username.charAt(0).toUpperCase()}
@@ -103,14 +116,14 @@ export function Header() {
               </DropdownMenu>
             ) : (
               /* Not Authenticated */
-              <>
+              <div className="flex items-center space-x-1 sm:space-x-2">
                 <Button variant="ghost" size="icon" onClick={handleSignIn}>
                   <User className="w-5 h-5" />
                 </Button>
-                <Button onClick={handleSignIn}>
+                <Button onClick={handleSignIn} className="hidden sm:inline-flex">
                   Sign In
                 </Button>
-              </>
+              </div>
             )}
           </div>
         </div>
