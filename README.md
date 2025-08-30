@@ -1,19 +1,66 @@
-<h1 align="center">GovTrackerPH</h1>
+# GovTrackerPH
 
-## Project Overview
+## Purpose
+GovTrackerPH is a web application designed to provide transparent, real-time tracking and analytics of government projects in the Philippines. It empowers citizens, administrators, and stakeholders to monitor project progress, comment, and access data-driven insights, fostering accountability and public engagement.
 
-GovTrackerPH is a full-stack web application designed to promote transparency and civic engagement by tracking government projects across the Philippines. The platform enables users to view, search, and interact with public infrastructure projects, see statistics, and participate through voting and comments. It features robust authentication, a modern UI, and a scalable architecture suitable for both citizens and administrators.
+## Features
+- **Project Tracking:** View, search, and filter government projects with detailed information and status updates.
+- **Comment System:** Users can comment on projects, fostering community feedback and transparency.
+- **Admin Dashboard:** (In development) Admins can manage users, projects, comments, and view analytics.
+- **Authentication:** Secure login and registration using Supabase and Firebase.
+- **Data Visualization:** Interactive charts and statistics for project metrics.
+- **Responsive UI:** Modern, mobile-friendly interface using Radix UI and Tailwind CSS.
 
----
+## Technical Stack
+- **Frontend:** Next.js 15 (App Router), React 19, TypeScript 5.9
+- **Backend:** Next.js API routes, Supabase (PostgreSQL), Firebase
+- **UI:** Radix UI, Tailwind CSS, Lucide Icons
+- **Database:** Supabase (PostgreSQL), with seed and migration scripts
+- **Authentication:** Supabase Auth, Firebase Auth
+- **Deployment:** Vercel
 
-## Tech Stack
-
-- **Frontend:** Next.js (App Router), React 19, TypeScript, Tailwind CSS, Radix UI, Lucide Icons, Recharts
-- **Backend:** Supabase (PostgreSQL, Auth, Storage), Firebase (Google Auth), Node.js (for scripts)
-- **State/Context:** React Context API
-- **API/Services:** RESTful endpoints (via Next.js API routes), Supabase client, custom service layers
-
----
+## Installation & Setup
+1. **Clone the repository:**
+   ```sh
+   git clone <your-repo-url>
+   cd govtrackerph
+   ```
+2. **Install dependencies:**
+   ```sh
+   npm install
+   ```
+3. **Configure environment variables:**
+   - Send me an email for the `.env.local.example` & `.env.local`
+   - Fill in your Supabase and Firebase credentials:
+     ```env
+     NEXT_PUBLIC_SUPABASE_URL=...
+     NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+     SUPABASE_URL=...
+     SUPABASE_SERVICE_ROLE_KEY=...
+     DB_PASSWORD=...
+     NEXT_PUBLIC_FIREBASE_API_KEY=...
+     NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
+     NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
+     NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
+     NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
+     NEXT_PUBLIC_FIREBASE_APP_ID=...
+     ```
+4. **Database setup:**
+   - Run the database setup scripts in `backend/` to initialize tables and seed data.
+   - Example:
+     ```sh
+     cd backend
+     node run-database-setup.mjs
+     ```
+5. **Start the development server:**
+   ```sh
+   npm run dev
+   ```
+6. **Build for production:**
+   ```sh
+   npm run build
+   npm start
+   ```
 
 ## Folder Structure & Key Files
 
@@ -49,129 +96,19 @@ govtrackerph/
 └── ...
 ```
 
----
+## Collaboration
+- **Branching:** Use feature branches for new features or bug fixes. Name branches descriptively (e.g., `feature/admin-dashboard`).
+- **Pull Requests:** Submit PRs for review before merging to `main`. Include clear descriptions and reference related issues.
+- **Code Style:** Follow the existing code style and conventions. Use TypeScript and React best practices.
+- **Issues:** Use GitHub Issues to report bugs, request features, or discuss improvements.
+- **Environment Variables:** Never commit secrets. Use `.env.local` for local development and Vercel dashboard for production secrets.
 
-## Detailed Workflow & Architecture
-
-### 1. Database & Backend
-
-- **Supabase** is used as the primary backend (PostgreSQL, Auth, Storage). All project/user/comment data is stored and accessed via Supabase.
-- **Database schema** is defined in `backend/database/` (currently empty, but intended for SQL migrations and seed data).
-- **Backend scripts** (currently placeholders) are intended for database setup and integration with Supabase.
-- **API routes** are implemented in `src/app/api/` using Next.js API routes, providing endpoints for projects, comments, stats, admin, etc.
-
-### 2. Authentication
-
-- **Google Sign-In** is implemented via Firebase Auth (`src/lib/auth/supabase-auth.ts`).
-- On sign-in, user data is synchronized to Supabase for unified user management.
-- The `AuthContext` (`src/context/AuthContext.tsx`) provides authentication state and methods to the entire app.
-
-### 3. Frontend (Next.js App)
-
-- **App Router**: Uses Next.js 15 App Router for routing, layouts, and server/client components.
-- **Global Providers**: The root layout wraps the app in `AuthProvider` for authentication context.
-- **UI Components**: Modular, reusable components for cards, tables, dialogs, forms, and admin dashboards. Built with Tailwind CSS and Radix UI for accessibility and design consistency.
-- **Pages**:
-  - `/` (Home): Project grid, filters, statistics, and search.
-  - `/auth`: Authentication page (Google sign-in).
-  - `/admin`: Admin dashboard (user/project management, analytics, security, etc.).
-  - `/project/[id]`: Project detail view.
-  - `/api/*`: API endpoints for data access.
-
-### 4. Data Flow & Services
-
-- **Service Layer**: All data fetching/mutations are abstracted in `src/services/` (e.g., `projectsService.ts`).
-- **Models**: TypeScript interfaces for all entities (Project, User, Comment, etc.) in `src/models/`.
-- **Supabase Client**: Configured in `src/lib/database/client.ts` and `src/services/supabaseClient.ts` for secure, typed access to the database.
-
-### 5. UI/UX
-
-- **Modern, Responsive UI**: Built with Tailwind CSS, Radix UI, and custom components.
-- **Project Cards**: Show project info, status, location, budget, contractor, progress, and images.
-- **Statistics Dashboard**: Real-time stats on projects, users, and engagement.
-- **Search & Filters**: Users can search/filter projects by location, status, etc.
-- **Voting & Comments**: Users can like/dislike projects and leave comments (fact tables).
-- **Admin Panel**: Tabs for managing users, projects, comments, analytics, and security.
+## Future Work: Admin Dashboard
+- **User Management:** Admins can add, remove, and manage user roles.
+- **Project Management:** Create, update, and archive projects from the dashboard.
+- **Comment Moderation:** Approve, delete, or flag inappropriate comments.
+- **Analytics:** View advanced statistics and reports on project progress and user engagement.
+- **Security:** Enhanced access controls and audit logs.
 
 ---
-
-## Current Progress & Status
-
-- **Frontend**: Core UI, routing, authentication, and service layers are implemented. Most major components are present and functional.
-- **Backend**: Supabase integration is complete; backend scripts and SQL files are placeholders (to be filled for full DB setup/migrations).
-- **Authentication**: Google sign-in and Supabase user sync are working.
-- **Data Models**: TypeScript models for all major entities are defined.
-- **API**: Next.js API routes are scaffolded for all major resources.
-- **Admin Features**: UI and structure are present; business logic may need further implementation.
-- **Testing/Validation**: Not fully implemented; recommend adding unit/integration tests.
-
----
-
-## Replication Guide (Step-by-Step)
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/MannLester/GovTrackerPH.git
-   cd GovTrackerPH
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   # or yarn install
-   ```
-
-3. **Set up environment variables**
-   - Create a `.env.local` file in the root directory.
-   - Add the following (replace with your own keys):
-     ```env
-     NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-     NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-     SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
-     NEXT_PUBLIC_FIREBASE_API_KEY=your-firebase-api-key
-     NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-firebase-auth-domain
-     NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-firebase-project-id
-     NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-firebase-storage-bucket
-     NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-firebase-messaging-sender-id
-     NEXT_PUBLIC_FIREBASE_APP_ID=your-firebase-app-id
-     NEXT_PUBLIC_API_URL=http://localhost:3000/api
-     ```
-
-4. **Configure Supabase**
-   - Set up a Supabase project and database.
-   - Define tables for `dim_project`, `dim_user`, `fact_comment_likes`, etc. (see `src/models/` for schema).
-   - (Optional) Use `backend/database/` SQL files for migrations (currently empty; fill as needed).
-
-5. **Configure Firebase**
-   - Set up a Firebase project for Google Auth.
-   - Enable Google sign-in and copy credentials to `.env.local`.
-
-6. **Run the development server**
-   ```bash
-   npm run dev
-   # or yarn dev
-   ```
-   Open [http://localhost:3000](http://localhost:3000) to view the app.
-
-7. **(Optional) Deploy**
-   - Deploy to Vercel or your preferred platform. Set environment variables in the deployment dashboard.
-
----
-
-## Notes for Replication
-
-- The backend folder contains placeholders for future scripts and SQL migrations. For a full production setup, implement these scripts and fill the SQL files.
-- All business logic for authentication, data fetching, and mutations is handled in the service and context layers.
-- The UI is modular and can be extended with new features or admin tools as needed.
-- For full feature parity, ensure Supabase and Firebase are configured with the correct tables, roles, and API keys.
-
----
-
-## Contact & Contribution
-
-- For questions, contact the project owner or open an issue on GitHub.
-- Contributions are welcome! Please fork the repo and submit a pull request.
-
----
-
-**This README is designed to enable an AI or developer to fully replicate, extend, or deploy the GovTrackerPH project.**
+For questions or contributions, please open an issue or pull request.
