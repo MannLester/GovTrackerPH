@@ -1,6 +1,7 @@
 export interface FactCommentLikes {
-    userId: string;
-    commentId: string;
-    likeType: 'like' | 'dislike';
-    createdAt: Date;
+    like_id: string;
+    user_id: string;
+    comment_id: string;
+    like_type: 'like' | 'dislike';
+    created_at: Date;
 }

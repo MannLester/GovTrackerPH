@@ -36,7 +36,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
         if (!token) return;
 
         // Fetch current user's vote status and latest counts
-        const response = await fetch(`/api/projects/${project.id || project.projectId}/like`, {
+        const response = await fetch(`/api/projects/${project.project_id}/like`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -57,7 +57,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
     }
 
     fetchCurrentVoteStatus()
-  }, [user, project.id, project.projectId])
+  }, [user, project.project_id])
 
   const handleVote = async (voteType: "like" | "dislike", e: React.MouseEvent) => {
     e.preventDefault() // Prevent navigation when clicking like/dislike
@@ -83,7 +83,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
         throw new Error('Failed to get authentication token')
       }
 
-      const response = await fetch(`/api/projects/${project.id || project.projectId}/like`, {
+      const response = await fetch(`/api/projects/${project.project_id}/like`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -117,7 +117,11 @@ export function ProjectCard({ project }: ProjectCardProps) {
     <Card className="overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
       <div className="relative">
         <Image
-          src={project.images && project.images.length > 0 ? project.images[0].imageUrl : "/placeholder.svg"}
+          src={(() => {
+            console.log('[ProjectCard] Project images:', project.images);
+            console.log('[ProjectCard] First image:', project.images?.[0]);
+            return project.images && project.images.length > 0 && project.images[0]?.image_url ? project.images[0].image_url : "/placeholder.svg";
+          })()}
           alt={project.title}
           width={400}
           height={200}
@@ -152,7 +156,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
         <div className="space-y-1 sm:space-y-2">
           <div className="flex justify-between text-xs sm:text-sm">
             <span className="text-gray-600">Budget:</span>
-            <span className="font-semibold text-gray-900 text-xs sm:text-sm">{project.amountFormatted || `₱${project.amount.toLocaleString()}`}</span>
+            <span className="font-semibold text-gray-900 text-xs sm:text-sm">{project.amount_formatted || `₱${project.amount.toLocaleString()}`}</span>
           </div>
           <div className="flex justify-between text-xs sm:text-sm">
             <span className="text-gray-600">Contractor:</span>
@@ -168,7 +172,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
               <span className="text-gray-600">Progress:</span>
               <span className="font-semibold text-gray-900">{project.progress}%</span>
             </div>
-            <Progress value={parseFloat(project.progress) || 0} className="h-2" />
+            <Progress value={parseFloat(project.progress.toString()) || 0} className="h-2" />
           </div>
         )}
 
@@ -208,7 +212,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
             </Button>
           </div>
           <div className="flex gap-1 sm:gap-2">
-            <Link href={`/project/${project.id || project.projectId}`} className="flex-1">
+            <Link href={`/project/${project.project_id}`} className="flex-1">
               <Button size="sm" variant="outline" className="w-full bg-transparent text-xs sm:text-sm h-8 sm:h-9">
                 View Details
               </Button>

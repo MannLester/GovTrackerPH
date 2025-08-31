@@ -51,7 +51,7 @@ export function UsersTab() {
   }, [])
 
   const getStatusName = (user: User) => {
-    return user.dim_status?.status_name || user.status_name || user.status_id;
+    return user.dim_status?.status_name || user.dim_status?.status_name || user.status_id;
   }
 
   const filteredUsers = users.filter(user => {

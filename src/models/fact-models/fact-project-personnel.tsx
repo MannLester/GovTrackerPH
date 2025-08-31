@@ -1,7 +1,11 @@
 export interface FactProjectPersonnel{
-    projectPersonnelId: string;
-    projectId: string;
-    userId: string;
+    personnel_id: string;
+    project_id: string;
+    user_id: string;
     role: string;
-    createdAt: Date;
+    assigned_date: Date;
+    end_date: Date;
+    is_active: boolean;
+    created_at: Date;
+    updated_at: Date;
 }

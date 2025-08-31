@@ -1,7 +1,9 @@
 export interface FactProjectImages{
-    imageId: string;
-    projectId: string;
-    imageUrl: string;
+    image_id: string;
+    project_id: string;
+    image_url: string;
     caption: string;
-    uploadedAt: Date;
+    is_primary: boolean;
+    uploaded_by: string;
+    created_at: Date;
 }

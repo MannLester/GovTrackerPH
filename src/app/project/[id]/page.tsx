@@ -38,13 +38,14 @@ export default function ProjectPage() {
           ...projectData,
           images: projectData.images && projectData.images.length > 0
             ? projectData.images
-            : [
-                {
-                  imageId: "placeholder",
-                  projectId: projectData.projectId || projectData.id || "",
-                  imageUrl: projectData.image || "/placeholder.svg",
-                  caption: "",
-                  uploadedAt: new Date()
+            : [{
+                image_id: "placeholder",
+                project_id: projectData.project_id || "",
+                image_url: projectData.image || "/placeholder.svg",
+                caption: "",
+                created_at: new Date(),
+                is_primary: true,
+                uploaded_by: "",
                 }
               ],
           milestones: projectData.milestones || []

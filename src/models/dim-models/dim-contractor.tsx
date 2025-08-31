@@ -1,7 +1,12 @@
 export interface Contractor{
-    contractorId: string;
-    name: string;
-    contactInfo: string;
+    contractor_id: string;
+    company_name: string;
+    contact_person: string;
+    email: string;
+    phone: string;
     address: string;
-    otherDetails: string;
+    license_number: string;
+    is_active: boolean;
+    created_at: Date;
+    updated_at: Date;
 }

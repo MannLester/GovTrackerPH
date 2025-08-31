@@ -1,8 +1,10 @@
 export interface Comment {
-  commentId: string;
-  userId: string;
-  projectId: string;
+  comment_id: string;
+  project_id: string;
+  user_id: string;
   content: string;
-  createdAt: Date;
-  parentCommentId: string;
+  parent_comment_id: string;
+  is_deleted: boolean;
+  created_at: Date;
+  updated_at: Date;
 }

@@ -1,38 +1,50 @@
 export interface Project {
-  projectId: string;
+  project_id: string;
   title: string;
   description: string;
   amount: number;
-  statusId: string;
-  contractorId: string;
-  locationId: string;
-  progress: string;
-  expectedOurcome: string;
+  start_date: Date;
+  end_date: Date;
+  status_id: string;
+  location_id: string;
+  contractor_id: string;
+  progress: number;
+  expected_outcome: string;
   reason: string;
-  startDate: Date;
-  expectedCompletionDate: Date;
-  createdAt: Date;
+  created_by: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
 // Extended interface for displaying projects with related data
 export interface ProjectWithDetails extends Project {
-  id: string; // Alias for projectId for easier use
-  status: string; // Status name from Status table
-  contractor: string; // Contractor name from Contractor table
-  location: string; // Location string (city, region)
-  expectedOutcome: string; // Fixed typo from expectedOurcome
+  project_id: string;
+  title: string;
+  description: string;
+  amount: number;
+  start_date: Date;
+  end_date: Date;
+  status: string;
+  location: string;
+  contractor: string;
+  progress: number;
+  expected_outcome: string;
+  reason: string;
+  created_by: string;
+  created_at: Date;
+  updated_at: Date;
   personnel: string; // Personnel information
   likes: number; // From fact tables
   dislikes: number; // From fact tables
   comments: number; // From fact tables
   image?: string; // Primary image URL
-  images?: import("@/models/fact-models/fact-project-images").FactProjectImages[]; // Array of image objects
+  images: import("@/models/fact-models/fact-project-images").FactProjectImages[]; // Array of image objects
   milestones?: Array<{
     title: string;
     date: Date;
     completed: boolean;
   }>;
   // Computed/display properties
-  amountFormatted?: string; // Formatted amount for display
-  progressNumber?: number; // Progress as number for calculations
+  amount_formatted?: string; // Formatted amount for display
+  progress_number?: number; // Progress as number for calculations
 }

@@ -91,10 +91,11 @@ export function ProjectGrid() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {projects.map((project) => (
-          <ProjectCard key={project.id} project={project} />
+        {projects.map((project, index) => (
+          <ProjectCard key={project.project_id || `project-${index}`} project={project} />
         ))}
       </div>
     </div>
   )
 }
+  

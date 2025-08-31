@@ -1,10 +1,10 @@
 export interface FactReports {
-    reportId: string;
-    reportType: 'project' | 'comment';
-    reporteeId: string;
+    report_id: string;
+    report_type: 'project' | 'comment';
+    reportee_id: string;
     reason: string;
-    userId: string;
-    reportedDate: Date;
-    createdAt: Date;
-    updatedAt: Date;
+    user_id: string;
+    reported_date: Date;
+    created_at: Date;
+    updated_at: Date;
 }

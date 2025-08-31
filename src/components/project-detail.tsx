@@ -40,7 +40,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
         if (!token) return;
 
         // Fetch current user's vote status and latest counts
-        const response = await fetch(`/api/projects/${project.projectId}/like`, {
+        const response = await fetch(`/api/projects/${project.project_id}/like`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -61,7 +61,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
     }
 
     fetchCurrentVoteStatus()
-  }, [user, project.projectId])
+  }, [user, project.project_id])
 
   const handleVote = async (voteType: "like" | "dislike") => {
     if (!user) {
@@ -84,7 +84,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
         throw new Error('Failed to get authentication token')
       }
 
-      const response = await fetch(`/api/projects/${project.id || project.projectId}/like`, {
+      const response = await fetch(`/api/projects/${project.project_id}/like`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -159,11 +159,11 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
           </div>
           <div className="flex items-center">
             <Calendar className="w-4 h-4 mr-1" />
-            Started: {project.startDate instanceof Date ? project.startDate.toLocaleDateString() : new Date(project.startDate).toLocaleDateString()}
+            Started: {project.start_date instanceof Date ? project.start_date.toLocaleDateString() : new Date(project.start_date).toLocaleDateString()}
           </div>
           <div className="flex items-center">
             <Clock className="w-4 h-4 mr-1" />
-            Expected: {project.expectedCompletionDate instanceof Date ? project.expectedCompletionDate.toLocaleDateString() : new Date(project.expectedCompletionDate).toLocaleDateString()}
+            Expected: {project.end_date instanceof Date ? project.end_date.toLocaleDateString() : new Date(project.end_date).toLocaleDateString()}
           </div>
         </div>
       </div>
@@ -174,9 +174,9 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
           project.images.map((img: import("@/models/fact-models/fact-project-images").FactProjectImages, index: number) => {
             console.log('[ProjectDetail] Rendering image', img);
             return (
-              <div key={img.imageId || index} className="relative aspect-video">
+              <div key={img.image_id || index} className="relative aspect-video">
                 <Image
-                  src={img.imageUrl || "/placeholder.svg"}
+                  src={img.image_url || "/placeholder.svg"}
                   alt={img.caption || `${project.title} - Image ${index + 1}`}
                   fill
                   className="object-cover rounded-lg"
@@ -236,7 +236,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-700 leading-relaxed">{project.expectedOutcome}</p>
+              <p className="text-gray-700 leading-relaxed">{project.expected_outcome}</p>
             </CardContent>
           </Card>
 
@@ -265,7 +265,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
           </Card>
 
           {/* Comments Section */}
-          <CommentSection projectId={project.id || project.projectId} />
+          <CommentSection projectId={project.project_id} />
         </div>
 
         {/* Sidebar */}
@@ -282,7 +282,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                     <span>Completion</span>
                     <span className="font-semibold">{project.progress}%</span>
                   </div>
-                  <Progress value={parseFloat(project.progress) || 0} className="h-3" />
+                  <Progress value={parseFloat(project.progress.toString()) || 0} className="h-3" />
                 </div>
               </CardContent>
             </Card>

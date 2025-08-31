@@ -1,8 +1,12 @@
 export interface Location{
-    locationId: string;
-    country: string;
-    city: string;
+    location_id: string;
     region: string;
+    province: string;
+    city: string;
+    barangay: string;
+    address_details: string;
     latitude: number;
     longitude: number;
+    created_at: Date;
+    updated_at: Date;
 }

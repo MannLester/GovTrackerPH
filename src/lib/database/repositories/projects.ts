@@ -113,17 +113,17 @@ export class ProjectsRepository {
     }
 
     // Get a single project by ID
-    async getProjectById(projectId: string): Promise<Project | null> {
+    async getProjectById(project_id: string): Promise<Project | null> {
         try {
-            console.log(`📍 Fetching project with ID: ${projectId}`);
+            console.log(`📍 Fetching project with ID: ${project_id}`);
 
             const { data, error } = await supabase
                 .from('dim_project')
                 .select(`
                     *,
                     dim_status:status_id (
-                        status_name
-                    ),
+                            status_name
+                        ),
                     dim_contractor:contractor_id (
                         company_name
                     ),
@@ -134,12 +134,12 @@ export class ProjectsRepository {
                         barangay
                     )
                 `)
-                .eq('project_id', projectId)
+                .eq('project_id', project_id)
                 .single();
 
             if (error) {
                 if (error.code === 'PGRST116') {
-                    console.log(`ℹ️ Project with ID ${projectId} not found`);
+                    console.log(`ℹ️ Project with ID ${project_id} not found`);
                     return null;
                 }
                 throw error;
@@ -150,11 +150,11 @@ export class ProjectsRepository {
             }
 
             // Fetch milestones for this project
-            const milestones = await milestonesRepository.getMilestonesByProjectId(projectId);
+            const milestones = await milestonesRepository.getMilestonesByProjectId(project_id);
 
             // Fetch images for this project
             const { factProjectImagesRepository } = await import('./fact-project-images');
-            const images = await factProjectImagesRepository.getImagesByProjectId(projectId);
+            const images = await factProjectImagesRepository.getImagesByProjectId(project_id);
 
             // Transform the data to match our Project interface
             const project: Project & { images: import("@/models/fact-models/fact-project-images").FactProjectImages[] } = {
@@ -173,11 +173,11 @@ export class ProjectsRepository {
                 created_by: data.created_by,
                 created_at: data.created_at,
                 updated_at: data.updated_at,
-                // Extract status name from joined data
+                // Extract status name
                 status_name: data.dim_status?.status_name,
-                // Extract contractor name from joined data
+                // Extract contractor name
                 contractor_name: data.dim_contractor?.company_name,
-                // Extract location data from joined data
+                // Extract location data
                 region: data.dim_location?.region,
                 province: data.dim_location?.province,
                 city: data.dim_location?.city,
@@ -198,7 +198,7 @@ export class ProjectsRepository {
             return project;
 
         } catch (error) {
-            console.error(`❌ Error fetching project ${projectId}:`, error);
+            console.error(`❌ Error fetching project ${project_id}:`, error);
             const errorDetails = handleSupabaseError(error, 'getProjectById');
             throw new Error(errorDetails.error);
         }

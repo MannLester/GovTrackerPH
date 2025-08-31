@@ -5,10 +5,9 @@ type SnakeCaseImage = {
   image_url?: string;
   caption?: string;
   uploaded_at?: string;
-  imageId?: string;
-  projectId?: string;
-  imageUrl?: string;
-  uploadedAt?: string | Date;
+  is_primary?: boolean;
+  uploaded_by?: string;
+  created_at?: string | Date;
 };
 import { ProjectWithDetails } from '@/models/dim-models/dim-project';
 import { FactProjectImages } from '@/models/fact-models/fact-project-images';
@@ -53,8 +52,10 @@ interface ApiProjectResponse {
   personnel?: string;
   reason?: string;
   start_date: string;
-  end_date: string; // Database field name
+  end_date: string;
   created_at: string;
+  created_by?: string;
+  updated_at?: string;
   status_name?: string;
   contractor_name?: string;
   location_name?: string;
@@ -123,56 +124,63 @@ export class ProjectsService {
       if (typeof project.images === 'string' && project.images) {
         images = (project.images as string)
           ? (project.images as string).split(',').map((url: string, idx: number): FactProjectImages => ({
-              imageId: `${project.project_id}_${idx}`,
-              projectId: project.project_id,
-              imageUrl: url.trim(),
+              image_id: `${project.project_id}_${idx}`,
+              project_id: project.project_id,
+              image_url: url.trim(),
               caption: '',
-              uploadedAt: new Date()
+              is_primary: true,
+              uploaded_by: '',
+              created_at: new Date(),
             }))
           : [];
       } else if (Array.isArray(project.images)) {
         images = project.images.map((img: string | SnakeCaseImage, idx: number): FactProjectImages => {
           if (typeof img === 'string') {
             return {
-              imageId: `${project.project_id}_${idx}`,
-              projectId: project.project_id,
-              imageUrl: img,
+              image_id: `${project.project_id}_${idx}`,
+              project_id: project.project_id,
+              image_url: img,
               caption: '',
-              uploadedAt: new Date()
+              is_primary: true,
+              uploaded_by: '',
+              created_at: new Date()
             };
           } else {
             return {
-              imageId: img.image_id || img.imageId || `${project.project_id}_${idx}`,
-              projectId: img.project_id || img.projectId || project.project_id,
-              imageUrl: img.image_url || img.imageUrl || '',
+              image_id: img.image_id || `${project.project_id}_${idx}`,
+              project_id: img.project_id ||  project.project_id,
+              image_url: img.image_url || '',
               caption: img.caption || '',
-              uploadedAt: img.uploaded_at ? new Date(img.uploaded_at) : (img.uploadedAt ? new Date(img.uploadedAt) : new Date())
+              is_primary: typeof img.is_primary === 'boolean' ? img.is_primary : true,
+              uploaded_by: img.uploaded_by || '',
+              created_at: img.created_at ? new Date(img.created_at) : (img.uploaded_at ? new Date(img.uploaded_at) : (img.uploaded_at ? new Date(img.uploaded_at) : new Date()))
             };
           }
         });
       }
       return {
         id: project.project_id,
-        projectId: project.project_id,
+        project_id: project.project_id,
         title: project.title,
         description: project.description,
         amount: project.budget || 0,
-        amountFormatted: `₱${(project.budget || 0).toLocaleString()}`,
-        statusId: project.status_id,
-        contractorId: project.contractor_id,
-        locationId: project.location_id,
+        amount_formatted: `₱${(project.budget || 0).toLocaleString()}`,
+        status_id: project.status_id,
+        contractor_id: project.contractor_id,
+        location_id: project.location_id,
         status: project.status_name || project.status_id,
         contractor: project.contractor_name || project.contractor_id,
         location: project.location_name || `${project.city}, ${project.region}` || project.location_id,
-        progress: (project.progress_percentage || 0).toString(),
-        progressNumber: project.progress_percentage || 0,
-        expectedOutcome: project.expected_outcome || project.expectedOurcome || "",
-        expectedOurcome: project.expected_outcome || "",
+        progress: project.progress_percentage || 0,
+        progress_number: project.progress_percentage || 0,
+        expected_outcome: project.expected_outcome || "",
         personnel: project.personnel || "",
         reason: project.reason || "",
-        startDate: safeDate(project.start_date),
-        expectedCompletionDate: safeDate(project.end_date),
-        createdAt: safeDate(project.created_at),
+        start_date: safeDate(project.start_date),
+        end_date: safeDate(project.end_date),
+        created_at: safeDate(project.created_at),
+        updated_at: safeDate(project.updated_at) || new Date(), // ✅ added
+        created_by: project.created_by || "", // ✅ added
         likes: project.likes || 0,
         dislikes: project.dislikes || 0,
         comments: project.comments || 0,
@@ -204,59 +212,65 @@ export class ProjectsService {
     if (typeof project.images === 'string' && project.images) {
       images = (project.images as string)
         ? (project.images as string).split(',').map((url: string, idx: number): FactProjectImages => ({
-            imageId: `${project.project_id}_${idx}`,
-            projectId: project.project_id,
-            imageUrl: url.trim(),
+            image_id: `${project.project_id}_${idx}`,
+            project_id: project.project_id,
+            image_url: url.trim(),
             caption: '',
-            uploadedAt: new Date()
+            is_primary: true,
+            uploaded_by: '',
+            created_at: new Date()
           }))
         : [];
     } else if (Array.isArray(project.images)) {
       images = project.images.map((img: string | SnakeCaseImage, idx: number): FactProjectImages => {
         if (typeof img === 'string') {
           return {
-            imageId: `${project.project_id}_${idx}`,
-            projectId: project.project_id,
-            imageUrl: img,
+            image_id: `${project.project_id}_${idx}`,
+            project_id: project.project_id,
+            image_url: img,
             caption: '',
-            uploadedAt: new Date()
+            is_primary: true,
+            uploaded_by: '',
+            created_at: new Date()
           };
         } else {
           return {
-            imageId: img.image_id || img.imageId || `${project.project_id}_${idx}`,
-            projectId: img.project_id || img.projectId || project.project_id,
-            imageUrl: img.image_url || img.imageUrl || '',
+            image_id: img.image_id || `${project.project_id}_${idx}`,
+            project_id: img.project_id || project.project_id,
+            image_url: img.image_url || '',
             caption: img.caption || '',
-            uploadedAt: img.uploaded_at ? new Date(img.uploaded_at) : (img.uploadedAt ? new Date(img.uploadedAt) : new Date())
+            is_primary: typeof img.is_primary === 'boolean' ? img.is_primary : true,
+            uploaded_by: img.uploaded_by || '',
+            created_at: img.created_at ? new Date(img.created_at) : (img.uploaded_at ? new Date(img.uploaded_at) : (img.uploaded_at ? new Date(img.uploaded_at) : new Date()))
           };
         }
       });
     }
     return {
-      id: project.project_id,
-      projectId: project.project_id,
+      project_id: project.project_id,
       title: project.title,
       description: project.description,
       amount: project.budget || 0,
-      amountFormatted: `₱${(project.budget || 0).toLocaleString()}`,
-      statusId: project.status_id,
-      contractorId: project.contractor_id,
-      locationId: project.location_id,
+      amount_formatted: `₱${(project.budget || 0).toLocaleString()}`,
+      status_id: project.status_id,
+      contractor_id: project.contractor_id,
+      location_id: project.location_id,
       status: project.status_name || project.status_id,
       contractor: project.contractor_name || project.contractor_id,
       location: project.location_name || `${project.city}, ${project.region}` || project.location_id,
-      progress: (project.progress_percentage || 0).toString(),
-      progressNumber: project.progress_percentage || 0,
-      expectedOutcome: project.expected_outcome || project.expectedOurcome || "",
-      expectedOurcome: project.expected_outcome || "",
+      progress: (project.progress_percentage || 0),
+      progress_number: project.progress_percentage || 0,
+      expected_outcome: project.expected_outcome || "",
       personnel: project.personnel || "",
       reason: project.reason || "",
-      startDate: safeDate(project.start_date),
-      expectedCompletionDate: safeDate(project.end_date),
-      createdAt: safeDate(project.created_at),
+      start_date: safeDate(project.start_date),
+      end_date: safeDate(project.end_date),
+      created_at: safeDate(project.created_at),
       likes: project.likes || 0,
       dislikes: project.dislikes || 0,
       comments: project.comments || 0,
+      created_by: project.created_by || "",
+      updated_at: safeDate(project.updated_at),
       image: project.primary_image,
       images,
       milestones: project.milestones?.map(m => ({
