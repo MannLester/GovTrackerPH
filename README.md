@@ -194,8 +194,10 @@ govtrackerph/
 - **Comment Moderation:** Approve, delete, or flag inappropriate comments.
 - **Analytics:** View advanced statistics and reports on project progress and user engagement.
 - **Security:** Enhanced access controls and audit logs.
-- **Added Feature:** Budget breakdown of the projects.
-- **Added Feature:** Contractor Profiles with their previous works.
+
+## Added Features:
+- **Budget breakdown of the projects.**
+- **Contractor Profiles with their previous works.**
 
 ---
 For questions or contributions, please open an issue or pull request.
