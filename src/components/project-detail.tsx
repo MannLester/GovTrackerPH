@@ -299,7 +299,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
                   <Building className="w-4 h-4 mr-1" />
                   Budget
                 </div>
-                <p className="font-semibold text-lg text-foreground">{project.amountFormatted || `₱${project.amount.toLocaleString()}`}</p>
+                <p className="font-semibold text-lg text-foreground">{project.amount_formatted || `₱${project.amount.toLocaleString()}`}</p>
               </div>
 
               <Separator />
