@@ -72,27 +72,112 @@ govtrackerph/
 │   ├── setup-supabase.mjs    # (Currently empty) Placeholder for Supabase setup
 │   └── ...
 ├── public/                   # Static assets (SVGs, images)
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── placeholder.svg
+│   ├── vercel.svg
+│   └── window.svg
 ├── src/
 │   ├── app/                  # Next.js app directory (routing, layouts, pages)
+│   │   ├── favicon.ico
+│   │   ├── globals.css
 │   │   ├── layout.tsx        # Root layout, global providers
 │   │   ├── page.tsx          # Home page (project grid, stats, filters)
-│   │   └── ...               # API routes, admin, auth, project pages
+│   │   ├── admin/            # Admin dashboard pages
+│   │   │   ├── layout.tsx
+│   │   │   ├── page-new.tsx
+│   │   │   └── page.tsx
+│   │   ├── api/              # API routes
+│   │   │   └── ...           # Nested API endpoints (admin, auth, comments, health, projects, setup, stats, test)
+│   │   ├── project/          # Project detail pages
+│   │   │   └── [id]/
+│   │   │       └── page.tsx
 │   ├── components/           # UI and feature components
-│   │   ├── header.tsx        # Main navigation/header
-│   │   ├── project-card.tsx  # Project display card
-│   │   ├── project-grid.tsx  # Project grid/listing
-│   │   ├── stats-overview.tsx# Statistics dashboard
-│   │   └── ...               # UI primitives, admin tabs, etc.
+│   │   ├── comment-section.tsx
+│   │   ├── header.tsx
+│   │   ├── mock-data-modal.tsx
+│   │   ├── project-card.tsx
+│   │   ├── project-detail.tsx
+│   │   ├── project-filters.tsx
+│   │   ├── project-grid.tsx
+│   │   ├── stats-overview.tsx
+│   │   ├── status-legend.tsx
+│   │   ├── admin/            # Admin dashboard components
+│   │   │   ├── admin-guard.tsx
+│   │   │   ├── admin-mail-tab.tsx
+│   │   │   ├── analytics-dashboard.tsx
+│   │   │   ├── bulk-ops-tab.tsx
+│   │   │   ├── comments-tab.tsx
+│   │   │   ├── metrics-tab.tsx
+│   │   │   ├── projects-tab.tsx
+│   │   │   ├── security-tab.tsx
+│   │   │   └── users-tab.tsx
+│   │   ├── ui/               # UI primitives
+│   │   │   ├── avatar.tsx
+│   │   │   ├── badge.tsx
+│   │   │   ├── button.tsx
+│   │   │   ├── card.tsx
+│   │   │   ├── dialog.tsx
+│   │   │   ├── dropdown-menu.tsx
+│   │   │   ├── input.tsx
+│   │   │   ├── modal.tsx
+│   │   │   ├── progress.tsx
+│   │   │   ├── search-filter.tsx
+│   │   │   ├── select.tsx
+│   │   │   ├── separator.tsx
+│   │   │   ├── table.tsx
+│   │   │   ├── tabs.tsx
+│   │   │   ├── textarea.tsx
+│   │   │   ├── toast.tsx
+│   │   │   └── tooltip.tsx
 │   ├── context/              # React Context (AuthContext)
-│   ├── hooks/                # Custom React hooks
+│   │   └── AuthContext.tsx
 │   ├── lib/                  # Utility libraries (auth, database, utils)
+│   │   ├── firebase.ts
+│   │   ├── utils.ts
 │   │   ├── auth/             # Auth logic (Firebase, Supabase)
-│   │   ├── database/         # Supabase client, helpers
+│   │   │   ├── config-new.ts
+│   │   │   ├── config.ts
+│   │   │   └── supabase-auth.ts
+│   │   ├── database/         # Supabase client, helpers, repositories
+│   │   │   ├── client.ts
+│   │   │   ├── config.ts
+│   │   │   ├── types.ts
+│   │   │   └── repositories/
+│   │   │       ├── admin.ts
+│   │   │       ├── comments.ts
+│   │   │       ├── fact-project-images.ts
+│   │   │       ├── milestones.ts
+│   │   │       ├── projects.ts
+│   │   │       └── users.ts
 │   ├── models/               # TypeScript models (dim/fact tables)
+│   │   ├── dim-models/
+│   │   │   ├── dim-comment.tsx
+│   │   │   ├── dim-contractor.tsx
+│   │   │   ├── dim-location.tsx
+│   │   │   ├── dim-project.tsx
+│   │   │   ├── dim-stats.tsx
+│   │   │   ├── dim-status.tsx
+│   │   │   └── dim-user.tsx
+│   │   ├── fact-models/
+│   │   │   ├── fact-comment-likes.tsx
+│   │   │   ├── fact-project-images.tsx
+│   │   │   ├── fact-project-likes.tsx
+│   │   │   ├── fact-project-milestones.tsx
+│   │   │   ├── fact-project-personnel.tsx
+│   │   │   └── fact-reports.tsx
 │   ├── services/             # Service layers for API/data access
-│   └── themes/               # Tailwind/theme config
+│   │   ├── adminService.ts
+│   │   ├── firebaseClient.ts
+│   │   ├── projectsService.ts
+│   │   └── supabaseClient.ts
 ├── package.json              # Project dependencies and scripts
 ├── tsconfig.json             # TypeScript configuration
+├── eslint.config.mjs         # ESLint config
+├── next.config.ts            # Next.js config
+├── postcss.config.mjs        # PostCSS config
+├── components.json           # (Optional) Component registry
 └── ...
 ```
 
@@ -109,6 +194,8 @@ govtrackerph/
 - **Comment Moderation:** Approve, delete, or flag inappropriate comments.
 - **Analytics:** View advanced statistics and reports on project progress and user engagement.
 - **Security:** Enhanced access controls and audit logs.
+- **Added Feature:** Budget breakdown of the projects.
+- **Added Feature:** Contractor Profiles with their previous works.
 
 ---
 For questions or contributions, please open an issue or pull request.
