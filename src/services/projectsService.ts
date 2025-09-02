@@ -9,7 +9,7 @@ type SnakeCaseImage = {
   uploaded_by?: string;
   created_at?: string | Date;
 };
-import { ProjectWithDetails } from '@/models/dim-models/dim-project';
+import { ProjectWithDetails, ProjectPersonnel } from '@/models/dim-models/dim-project';
 import { FactProjectImages } from '@/models/fact-models/fact-project-images';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
@@ -175,6 +175,7 @@ export class ProjectsService {
         progress_number: project.progress_percentage || 0,
         expected_outcome: project.expected_outcome || "",
         personnel: project.personnel || "",
+        personnel_list: (project as any).personnel_list || [],
         reason: project.reason || "",
         start_date: safeDate(project.start_date),
         end_date: safeDate(project.end_date),
@@ -262,6 +263,7 @@ export class ProjectsService {
       progress_number: project.progress_percentage || 0,
       expected_outcome: project.expected_outcome || "",
       personnel: project.personnel || "",
+      personnel_list: (project as any).personnel_list || [],
       reason: project.reason || "",
       start_date: safeDate(project.start_date),
       end_date: safeDate(project.end_date),

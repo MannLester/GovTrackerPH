@@ -156,8 +156,33 @@ export class ProjectsRepository {
             const { factProjectImagesRepository } = await import('./fact-project-images');
             const images = await factProjectImagesRepository.getImagesByProjectId(project_id);
 
+            // Fetch personnel for this project
+            const { data: personnelData, error: personnelError } = await supabase
+                .from('fact_project_personnel')
+                .select(`
+                    personnel_id,
+                    user_id,
+                    users:user_id (
+                        username
+                    )
+                `)
+                .eq('project_id', project_id);
+
+            if (personnelError) {
+                console.warn(`⚠️ Error fetching personnel for project ${project_id}:`, personnelError);
+            }
+
+            const personnel = (personnelData || []).map((p: any) => ({
+                personnel_id: p.personnel_id,
+                user_id: p.user_id,
+                username: p.users?.username || `User ${p.user_id}`
+            }));
+
             // Transform the data to match our Project interface
-            const project: Project & { images: import("@/models/fact-models/fact-project-images").FactProjectImages[] } = {
+            const project: Project & { 
+                images: import("@/models/fact-models/fact-project-images").FactProjectImages[];
+                personnel_list?: import("@/models/dim-models/dim-project").ProjectPersonnel[];
+            } = {
                 project_id: data.project_id,
                 title: data.title,
                 description: data.description,
@@ -191,7 +216,9 @@ export class ProjectsRepository {
                     completed_at: m.completed_at
                 })),
                 // Attach images
-                images
+                images,
+                // Attach personnel
+                personnel_list: personnel
             };
 
             console.log(`✅ Successfully fetched project: ${project.title} with ${milestones.length} milestones`);

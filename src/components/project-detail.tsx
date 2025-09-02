@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator"
 import { ThumbsUp, ThumbsDown, MapPin, Calendar, User, Building, Target, Clock, CheckCircle } from "lucide-react"
 import Image from "next/image"
 import { CommentSection } from "@/components/comment-section"
+import { PersonnelList } from "@/components/personnel-list"
 import { getStatusColor, getStatusText } from "@/components/status-legend"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/context/AuthContext"
@@ -315,11 +316,15 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
               <Separator />
 
               <div>
-                <div className="flex items-center text-sm text-gray-600 mb-1">
+                <div className="flex items-center text-sm text-gray-600 mb-3">
                   <User className="w-4 h-4 mr-1" />
                   Key Personnel
                 </div>
-                <p className="text-sm text-foreground leading-relaxed">{project.personnel}</p>
+                {project.personnel_list && project.personnel_list.length > 0 ? (
+                  <PersonnelList personnel={project.personnel_list} />
+                ) : (
+                  <p className="text-sm text-foreground leading-relaxed">{project.personnel || "No personnel information available"}</p>
+                )}
               </div>
             </CardContent>
           </Card>

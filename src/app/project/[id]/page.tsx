@@ -15,6 +15,7 @@ interface Project extends Omit<ProjectWithDetails, "image" | "milestones"> {
     date: Date
     completed: boolean
   }>
+  personnel_list?: import("@/models/dim-models/dim-project").ProjectPersonnel[]
 }
 
 export default function ProjectPage() {
@@ -48,7 +49,8 @@ export default function ProjectPage() {
                 uploaded_by: "",
                 }
               ],
-          milestones: projectData.milestones || []
+          milestones: projectData.milestones || [],
+          personnel_list: projectData.personnel_list || []
         }
         
         setProject(transformedProject)
