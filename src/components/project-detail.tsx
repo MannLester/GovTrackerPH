@@ -149,33 +149,33 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
           </div>
         </div>
 
-        <h1 className="text-4xl font-bold text-foreground font-[family-name:var(--font-space-grotesk)]">
+        <h1 className="text-3xl sm:text-4xl font-bold text-foreground font-[family-name:var(--font-space-grotesk)] line-clamp-2">
           {project.title}
         </h1>
 
-        <div className="flex items-center space-x-6 text-gray-600">
-          <div className="flex items-center">
-            <MapPin className="w-4 h-4 mr-1" />
+        <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-6 text-gray-600">
+          <div className="flex items-center text-xs sm:text-base">
+            <MapPin className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
             {project.location}
           </div>
-          <div className="flex items-center">
-            <Calendar className="w-4 h-4 mr-1" />
+          <div className="flex items-center text-xs sm:text-base">
+            <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
             Started: {project.start_date instanceof Date ? project.start_date.toLocaleDateString() : new Date(project.start_date).toLocaleDateString()}
           </div>
-          <div className="flex items-center">
-            <Clock className="w-4 h-4 mr-1" />
+          <div className="flex items-center text-xs sm:text-base">
+            <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
             Expected: {project.end_date instanceof Date ? project.end_date.toLocaleDateString() : new Date(project.end_date).toLocaleDateString()}
           </div>
         </div>
       </div>
 
-      {/* Image Gallery */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Image Gallery - Horizontal scroll on mobile */}
+      <div className="md:grid md:grid-cols-3 md:gap-4 flex md:flex-none overflow-x-auto gap-4 pb-2">
         {project.images && project.images.length > 0 ? (
           project.images.map((img: import("@/models/fact-models/fact-project-images").FactProjectImages, index: number) => {
             console.log('[ProjectDetail] Rendering image', img);
             return (
-              <div key={img.image_id || index} className="relative aspect-video">
+              <div key={img.image_id || index} className="relative aspect-video flex-shrink-0 w-80 md:w-auto">
                 <Image
                   src={img.image_url || "/placeholder.svg"}
                   alt={img.caption || `${project.title} - Image ${index + 1}`}
@@ -191,7 +191,7 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
             );
           })
         ) : (
-          <div className="relative aspect-video">
+          <div className="relative aspect-video flex-shrink-0 w-80 md:w-auto">
             <Image
               src="/placeholder.svg"
               alt="No image available"
@@ -202,7 +202,158 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Mobile Layout */}
+      <div className="lg:hidden space-y-6">
+        {/* Project Overview */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-[family-name:var(--font-space-grotesk)]">Project Overview</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-700 leading-relaxed">{project.description}</p>
+          </CardContent>
+        </Card>
+
+        {/* Why This Project? */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center font-[family-name:var(--font-space-grotesk)]">
+              <Target className="w-5 h-5 mr-2" />
+              Why This Project?
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-700 leading-relaxed">{project.reason}</p>
+          </CardContent>
+        </Card>
+
+        {/* Expected Outcome */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center font-[family-name:var(--font-space-grotesk)]">
+              <CheckCircle className="w-5 h-5 mr-2" />
+              Expected Outcome
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-700 leading-relaxed">{project.expected_outcome}</p>
+          </CardContent>
+        </Card>
+
+        {/* Project Details */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-[family-name:var(--font-space-grotesk)]">Project Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <div className="flex items-center text-sm text-gray-600 mb-1">
+                <Building className="w-4 h-4 mr-1" />
+                Budget
+              </div>
+              <p className="font-semibold text-lg text-foreground">{project.amount_formatted || `₱${project.amount.toLocaleString()}`}</p>
+            </div>
+
+            <Separator />
+
+            <div>
+              <div className="flex items-center text-sm text-gray-600 mb-1">
+                <Building className="w-4 h-4 mr-1" />
+                Contractor
+              </div>
+              <p className="font-medium text-foreground">{project.contractor}</p>
+            </div>
+
+            <Separator />
+
+            <div>
+              <div className="flex items-center text-sm text-gray-600 mb-3">
+                <User className="w-4 h-4 mr-1" />
+                Key Personnel
+              </div>
+              {project.personnel_list && project.personnel_list.length > 0 ? (
+                <PersonnelList personnel={project.personnel_list} />
+              ) : (
+                <p className="text-sm text-foreground leading-relaxed">{project.personnel || "No personnel information available"}</p>
+              )}
+            </div>
+
+            {/* Project Progress - only show if in progress */}
+            {project.status === "in-progress" && (
+              <>
+                <Separator />
+                <div>
+                  <div className="flex items-center text-sm text-gray-600 mb-2">
+                    Progress
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Completion</span>
+                      <span className="font-semibold">{project.progress}%</span>
+                    </div>
+                    <Progress value={parseFloat(project.progress.toString()) || 0} className="h-3" />
+                  </div>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Project Milestones */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-[family-name:var(--font-space-grotesk)]">Project Milestones</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {(project.milestones ?? []).map((milestone, index) => (
+                <div key={index} className="flex items-center space-x-3">
+                  <div className={`w-4 h-4 rounded-full ${milestone.completed ? "bg-green-500" : "bg-gray-300"}`} />
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <span className={`font-medium ${milestone.completed ? "text-foreground" : "text-gray-600"}`}>
+                        {milestone.title}
+                      </span>
+                      <span className="text-sm text-gray-500">{milestone.date instanceof Date ? milestone.date.toLocaleDateString() : new Date(milestone.date).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Community Engagement */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-[family-name:var(--font-space-grotesk)]">Community Engagement</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Total Votes</span>
+                <span className="font-semibold">{currentLikes + currentDislikes}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Support Rate</span>
+                <span className="font-semibold text-green-600">
+                  {Math.round((currentLikes / (currentLikes + currentDislikes)) * 100)}%
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Comments</span>
+                <span className="font-semibold">{project.comments}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Comments Section */}
+        <CommentSection projectId={project.project_id} />
+      </div>
+
+      {/* Desktop Layout */}
+      <div className="hidden lg:grid lg:grid-cols-3 gap-8">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Project Description */}
