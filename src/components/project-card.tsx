@@ -19,6 +19,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const [userVote, setUserVote] = useState<"like" | "dislike" | null>(null)
   const [currentLikes, setCurrentLikes] = useState<number>(project.likes)
   const [currentDislikes, setCurrentDislikes] = useState<number>(project.dislikes)
+  const [commentCount, setCommentCount] = useState<number>(0)
   const [isVoting, setIsVoting] = useState(false)
   
   const { user, signInWithGoogle } = useAuth()
@@ -26,7 +27,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
   // Debug log for images
   console.log('[ProjectCard] Images for project', project.title, project.images);
 
-  // Fetch current vote status and latest counts on component mount
+  // Fetch current vote status, latest counts, and comment count on component mount
   useEffect(() => {
     const fetchCurrentVoteStatus = async () => {
       if (!user) return;
@@ -58,6 +59,23 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
     fetchCurrentVoteStatus()
   }, [user, project.project_id])
+
+  // Fetch comment count for this project
+  useEffect(() => {
+    const fetchCommentCount = async () => {
+      try {
+        const response = await fetch(`/api/projects/${project.project_id}/comments/count`)
+        if (response.ok) {
+          const data = await response.json()
+          setCommentCount(data.count || 0)
+        }
+      } catch (error) {
+        console.error('Error fetching comment count:', error)
+      }
+    }
+
+    fetchCommentCount()
+  }, [project.project_id])
 
   const handleVote = async (voteType: "like" | "dislike", e: React.MouseEvent) => {
     e.preventDefault() // Prevent navigation when clicking like/dislike
@@ -208,7 +226,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
             </Button>
             <Button variant="ghost" size="sm" className="flex items-center space-x-1 text-gray-600 hover:text-gray-700 p-1 sm:p-2">
               <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="text-xs">{project.comments}</span>
+              <span className="text-xs">{commentCount}</span>
             </Button>
           </div>
           <div className="flex gap-1 sm:gap-2">
