@@ -10,6 +10,7 @@ export function ProjectGrid() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [total, setTotal] = useState(0)
+  const [totalCount, setTotalCount] = useState(0)
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -19,8 +20,16 @@ export function ProjectGrid() {
           limit: 12, // Get more projects for the grid
           page: 1
         })
+        console.log('📍 ProjectGrid - API response:', response)
+        console.log('📍 ProjectGrid - Total from response:', response.total)
         setProjects(response.projects)
         setTotal(response.total)
+        
+        // Fetch direct count from dim_project table
+        const countResponse = await fetch('/api/projects/count')
+        const countData = await countResponse.json()
+        console.log('📍 ProjectGrid - Direct count:', countData.count)
+        setTotalCount(countData.count)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch projects')
         console.error('Error fetching projects:', err)
@@ -85,9 +94,8 @@ export function ProjectGrid() {
           Government Projects
         </h2>
         <div className="text-sm text-muted-foreground">
-          {/* Change the total to the database next */}
-          Showing {projects.length} of 4 projects  
-        </div>
+          Showing {projects.length} of {totalCount} projects  
+        </div>  
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">

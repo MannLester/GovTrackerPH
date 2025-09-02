@@ -77,7 +77,7 @@ interface ApiProjectResponse {
 
 interface ApiProjectsResponse {
   projects: ApiProjectResponse[];
-  total: number;
+  totalCount: number;
   page: number;
   totalPages: number;
 }
@@ -197,7 +197,7 @@ export class ProjectsService {
 
     return {
       projects: transformedProjects,
-      total: response.total,
+      total: response.totalCount,
       page: response.page,
       totalPages: response.totalPages,
     };
