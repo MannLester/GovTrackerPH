@@ -4,10 +4,8 @@ import { Header } from "@/components/header"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { UsersTab } from "@/components/admin/users-tab"
 import { ProjectsTab } from "@/components/admin/projects-tab"
-import { CommentsTab } from "@/components/admin/comments-tab"
-import { BulkOpsTab } from "@/components/admin/bulk-ops-tab"
-import { MetricsTab } from "@/components/admin/metrics-tab"
-import { SecurityTab } from "@/components/admin/security-tab"
+import { DatabaseTab } from "@/components/admin/database-tab"
+import { HealthCheckTab } from "@/components/admin/health-check-tab"
 import { AdminMailTab } from "@/components/admin/admin-mail-tab"
 import { AdminGuard } from "@/components/admin/admin-guard"
 //Here
@@ -19,21 +17,19 @@ export default function AdminPage() {
         
         <main className="container mx-auto px-4 py-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Developer Dashboard</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
           <p className="text-gray-600 mt-2">
-            Manage users, projects, and system administration
+            Manage users, projects, database, and system health
           </p>
         </div>
 
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="projects">Projects</TabsTrigger>
-            <TabsTrigger value="comments">Comments</TabsTrigger>
-            <TabsTrigger value="bulk-ops">Bulk Ops</TabsTrigger>
-            <TabsTrigger value="metrics">Metrics</TabsTrigger>
-            <TabsTrigger value="security">Security</TabsTrigger>
-            <TabsTrigger value="admin-mail">Admin Mail</TabsTrigger>
+            <TabsTrigger value="database">Database</TabsTrigger>
+            <TabsTrigger value="health-check">Health Check</TabsTrigger>
+            <TabsTrigger value="system-mail">System Mail</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users">
@@ -44,23 +40,15 @@ export default function AdminPage() {
             <ProjectsTab />
           </TabsContent>
 
-          <TabsContent value="comments">
-            <CommentsTab />
+          <TabsContent value="database">
+            <DatabaseTab />
           </TabsContent>
 
-          <TabsContent value="bulk-ops">
-            <BulkOpsTab />
+          <TabsContent value="health-check">
+            <HealthCheckTab />
           </TabsContent>
 
-          <TabsContent value="metrics">
-            <MetricsTab />
-          </TabsContent>
-
-          <TabsContent value="security">
-            <SecurityTab />
-          </TabsContent>
-
-          <TabsContent value="admin-mail">
+          <TabsContent value="system-mail">
             <AdminMailTab />
           </TabsContent>
         </Tabs>
