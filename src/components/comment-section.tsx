@@ -67,6 +67,7 @@ export function CommentSection({ projectId }: CommentSectionProps) {
   const [newReply, setNewReply] = useState("") // Simple string state like newComment
   const [submitting, setSubmitting] = useState(false) // For main comments only
   const [replySubmitting, setReplySubmitting] = useState(false) // Simple boolean like submitting
+  const [visibleReplies, setVisibleReplies] = useState<Set<string>>(new Set()) // Track which comments have visible replies
   
   const replyTextareaRef = useRef<HTMLTextAreaElement>(null)
   
@@ -396,6 +397,19 @@ export function CommentSection({ projectId }: CommentSectionProps) {
     }
   }
 
+  // Toggle reply visibility
+  const toggleRepliesVisibility = (commentId: string) => {
+    setVisibleReplies(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(commentId)) {
+        newSet.delete(commentId)
+      } else {
+        newSet.add(commentId)
+      }
+      return newSet
+    })
+  }
+
   // Comment Item Component
   const CommentItem = ({ comment, isReply = false }: { comment: CommentWithUser; isReply?: boolean }) => (
     <div className={`flex space-x-3 ${isReply ? 'ml-8 pt-3 border-l-2 border-gray-100 pl-4' : ''}`}>
@@ -443,6 +457,17 @@ export function CommentSection({ projectId }: CommentSectionProps) {
               Reply
             </Button>
           )}
+
+          {!isReply && comment.replies && comment.replies.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => toggleRepliesVisibility(comment.comment_id)}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              {visibleReplies.has(comment.comment_id) ? 'Hide Replies' : `View Replies (${comment.replies.length})`}
+            </Button>
+          )}
         </div>
 
         {replyingTo === comment.comment_id && (
@@ -466,7 +491,7 @@ export function CommentSection({ projectId }: CommentSectionProps) {
           </div>
         )}
 
-        {comment.replies && comment.replies.length > 0 && (
+        {comment.replies && comment.replies.length > 0 && visibleReplies.has(comment.comment_id) && (
           <div className="space-y-3 mt-3">
             {comment.replies.map((reply: Comment) => (
               <CommentItem 
