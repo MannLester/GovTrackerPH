@@ -178,10 +178,21 @@ export class ProjectsRepository {
                 username: p.users?.username || `User ${p.user_id}`
             }));
 
+            // Fetch comment count for this project
+            const { count: commentCount, error: commentError } = await supabase
+                .from('dim_comment')
+                .select('*', { count: 'exact', head: true })
+                .eq('project_id', project_id);
+
+            if (commentError) {
+                console.warn(`⚠️ Error fetching comment count for project ${project_id}:`, commentError);
+            }
+
             // Transform the data to match our Project interface
             const project: Project & { 
                 images: import("@/models/fact-models/fact-project-images").FactProjectImages[];
                 personnel_list?: import("@/models/dim-models/dim-project").ProjectPersonnel[];
+                comments?: number;
             } = {
                 project_id: data.project_id,
                 title: data.title,
@@ -207,6 +218,8 @@ export class ProjectsRepository {
                 province: data.dim_location?.province,
                 city: data.dim_location?.city,
                 barangay: data.dim_location?.barangay,
+                // Include comment count
+                comments: commentCount || 0,
                 // Include milestones
                 milestones: milestones.map(m => ({
                     milestone_id: m.milestone_id,
