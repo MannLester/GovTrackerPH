@@ -1,9 +1,8 @@
 'use client'
 
 import { Button } from "@/components/ui/button"
-import { Search, User, Bell, LogOut } from "lucide-react"
+import { Moon, Sun, User, Bell, LogOut } from "lucide-react"
 import Link from "next/link"
-import { Input } from "@/components/ui/input"
 import { useAuth } from "@/context/AuthContext"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -55,22 +54,13 @@ export function Header() {
             </Link>
           </div>
 
-          {/* Search - hidden on mobile, shown on tablet+ */}
-          <div className="hidden md:flex flex-1 max-w-md mx-4">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input placeholder="Search projects, barangay, city, province..." className="pl-10 border-primary" />
-            </div>
-          </div>
 
           {/* Actions - responsive layout */}
           <div className="flex items-center space-x-1 sm:space-x-2">
-            {/* Search button for mobile */}
-            <div className="block md:hidden">
-              <Button variant="ghost" size="icon">
-                <Search className="w-5 h-5" />
-              </Button>
-            </div>
+            {/* Theme toggle */}
+            <Button variant="ghost" size="icon">
+              <Sun className="w-5 h-5" />
+            </Button>
 
             {/* Notifications - only show for authenticated users */}
             {user && (

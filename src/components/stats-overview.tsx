@@ -46,27 +46,29 @@ export function StatsOverview() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {[...Array(4)].map((_, index) => (
-          <Card key={index} className="animate-pulse">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div className="h-4 bg-gray-200 rounded w-20"></div>
-              <div className="h-4 w-4 bg-gray-200 rounded"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-8 bg-gray-200 rounded w-16 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-24"></div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="mb-8">
+        <div className="flex overflow-x-auto gap-4 pb-4 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-6 md:overflow-visible md:pb-0">
+          {[...Array(4)].map((_, index) => (
+            <Card key={index} className="animate-pulse flex-shrink-0 w-64 md:w-auto">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="h-4 bg-gray-200 rounded w-20"></div>
+                <div className="h-4 w-4 bg-gray-200 rounded"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-8 bg-gray-200 rounded w-16 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-24"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card className="col-span-full">
+      <div className="mb-8">
+        <Card>
           <CardContent className="p-6">
             <p className="text-red-500 text-center">{error}</p>
           </CardContent>
@@ -76,24 +78,27 @@ export function StatsOverview() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      {stats.map((stat) => {
-        const IconComponent = iconMap[stat.icon] || Building2
-        return (
-          <Card key={stat.stats_id}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-foreground">{stat.title}</CardTitle>
-              <IconComponent className="h-4 w-4 text-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground font-[family-name:var(--font-space-grotesk)]">
-                {stat.value.toLocaleString()}
-              </div>
-              <p className="text-xs text-foreground">{stat.description}</p>
-            </CardContent>
-          </Card>
-        )
-      })}
+    <div className="mb-8">
+      <div className="flex overflow-x-auto gap-4 pb-4 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-6 md:overflow-visible md:pb-0">
+        {stats.map((stat) => {
+          const IconComponent = iconMap[stat.icon] || Building2
+          return (
+            <Card key={stat.stats_id} className="flex-shrink-0 w-64 md:w-auto">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-foreground">{stat.title}</CardTitle>
+                <IconComponent className="h-4 w-4 text-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-foreground font-[family-name:var(--font-space-grotesk)]">
+                  {stat.value.toLocaleString()}
+                </div>
+                <p className="text-xs text-foreground">{stat.description}</p>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
     </div>
   )
 }
+  
