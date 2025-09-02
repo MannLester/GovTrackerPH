@@ -27,21 +27,24 @@ export function ProjectCard({ project }: ProjectCardProps) {
   // Debug log for images
   console.log('[ProjectCard] Images for project', project.title, project.images);
 
-  // Fetch current vote status, latest counts, and comment count on component mount
+  // Fetch current vote status and latest counts on component mount
   useEffect(() => {
     const fetchCurrentVoteStatus = async () => {
-      if (!user) return;
-
       try {
-        const token = await AuthService.getIdToken()
-        if (!token) return;
+        // Always fetch vote counts (public data)
+        const headers: Record<string, string> = {}
+        
+        // Add authorization if user is logged in
+        if (user) {
+          const token = await AuthService.getIdToken()
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`
+          }
+        }
 
-        // Fetch current user's vote status and latest counts
         const response = await fetch(`/api/projects/${project.project_id}/like`, {
           method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
+          headers,
         })
 
         if (response.ok) {
@@ -49,7 +52,10 @@ export function ProjectCard({ project }: ProjectCardProps) {
           if (data.success) {
             setCurrentLikes(data.data.likes)
             setCurrentDislikes(data.data.dislikes)
-            setUserVote(data.data.userVote)
+            // Only set user vote if user is logged in
+            if (user) {
+              setUserVote(data.data.userVote)
+            }
           }
         }
       } catch (error) {

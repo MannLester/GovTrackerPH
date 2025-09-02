@@ -34,18 +34,21 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
   // Fetch current user vote and latest counts on component mount
   useEffect(() => {
     const fetchCurrentVoteStatus = async () => {
-      if (!user) return;
-
       try {
-        const token = await AuthService.getIdToken()
-        if (!token) return;
+        // Always fetch vote counts (public data)
+        const headers: Record<string, string> = {}
+        
+        // Add authorization if user is logged in
+        if (user) {
+          const token = await AuthService.getIdToken()
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`
+          }
+        }
 
-        // Fetch current user's vote status and latest counts
         const response = await fetch(`/api/projects/${project.project_id}/like`, {
           method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
+          headers,
         })
 
         if (response.ok) {
@@ -53,7 +56,10 @@ export function ProjectDetail({ project }: ProjectDetailProps) {
           if (data.success) {
             setCurrentLikes(data.data.likes)
             setCurrentDislikes(data.data.dislikes)
-            setUserVote(data.data.userVote)
+            // Only set user vote if user is logged in
+            if (user) {
+              setUserVote(data.data.userVote)
+            }
           }
         }
       } catch (error) {

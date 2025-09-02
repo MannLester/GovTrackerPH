@@ -8,30 +8,7 @@ export async function GET(
 ) {
   const { id } = await context.params;
   try {
-    const auth = await authenticateUser(request);
-
-    if (auth.error || !auth.user) {
-      return NextResponse.json(
-        { error: auth.error || 'Authentication required' },
-        { status: 401 }
-      ); 
-    }
-
-    const userId = auth.user.user_id;
-
-    // Get current user's vote
-    const { data: userVote, error: voteError } = await supabase
-      .from('fact_project_likes')
-      .select('like_type')
-      .eq('project_id', id)
-      .eq('user_id', userId)
-      .single();
-
-    if (voteError && voteError.code !== 'PGRST116') {
-      throw voteError;
-    }
-
-    // Get total like/dislike counts
+    // Get total like/dislike counts (public, no auth required)
     const { data: allVotes, error: countError } = await supabase
       .from('fact_project_likes')
       .select('like_type')
@@ -44,12 +21,38 @@ export async function GET(
     const likes = allVotes?.filter(v => v.like_type === 'like').length || 0;
     const dislikes = allVotes?.filter(v => v.like_type === 'dislike').length || 0;
 
+    // Try to get user-specific vote status (optional, only if authenticated)
+    let userVote: 'like' | 'dislike' | null = null;
+    
+    try {
+      const auth = await authenticateUser(request);
+      
+      if (auth.user && !auth.error) {
+        const userId = auth.user.user_id;
+        
+        // Get current user's vote
+        const { data: userVoteData, error: voteError } = await supabase
+          .from('fact_project_likes')
+          .select('like_type')
+          .eq('project_id', id)
+          .eq('user_id', userId)
+          .single();
+
+        if (!voteError || voteError.code === 'PGRST116') {
+          userVote = userVoteData?.like_type || null;
+        }
+      }
+    } catch (authError) {
+      // Authentication failed, but we still return public counts
+      console.log('No authentication provided, returning public counts only');
+    }
+
     return NextResponse.json({
       success: true,
       data: {
         likes,
         dislikes,
-        userVote: userVote?.like_type || null
+        userVote
       }
     });
 
