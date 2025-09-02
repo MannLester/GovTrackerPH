@@ -44,10 +44,15 @@ export function ProjectGrid() {
   if (loading) {
     return (
       <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-foreground font-[family-name:var(--font-space-grotesk)]">
-            Government Projects
-          </h2>
+        <div className="mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-2xl font-bold text-foreground font-[family-name:var(--font-space-grotesk)]">
+              Government Projects
+            </h2>
+            <div className="text-sm text-muted-foreground mt-1 sm:mt-0">
+              Loading projects...
+            </div>
+          </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {[...Array(6)].map((_, i) => (
@@ -68,10 +73,15 @@ export function ProjectGrid() {
   if (error) {
     return (
       <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-foreground font-[family-name:var(--font-space-grotesk)]">
-            Government Projects
-          </h2>
+        <div className="mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-2xl font-bold text-foreground font-[family-name:var(--font-space-grotesk)]">
+              Government Projects
+            </h2>
+            <div className="text-sm text-muted-foreground mt-1 sm:mt-0">
+              Error loading projects
+            </div>
+          </div>
         </div>
         <div className="text-center py-8">
           <p className="text-red-600 mb-4">Error loading projects: {error}</p>
@@ -89,13 +99,15 @@ export function ProjectGrid() {
   return (
     
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-foreground font-[family-name:var(--font-space-grotesk)]">
-          Government Projects
-        </h2>
-        <div className="text-sm text-muted-foreground">
-          Showing {projects.length} of {totalCount} projects  
-        </div>  
+      <div className="mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-2xl font-bold text-foreground font-[family-name:var(--font-space-grotesk)]">
+            Government Projects
+          </h2>
+          <div className="text-sm text-muted-foreground mt-1 sm:mt-0">
+            Showing {projects.length} of {totalCount} projects  
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
